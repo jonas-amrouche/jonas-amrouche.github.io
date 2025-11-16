@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/jonas-amrouche.github.io/', // Replace with your actual repository name
+  base: '/', // Use root path for username.github.io sites
   build: {
     outDir: 'dist',
   }
