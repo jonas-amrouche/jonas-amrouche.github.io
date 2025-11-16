@@ -1,6 +1,6 @@
-/**
- * @type {import('vite').UserConfig}
- */
-export default{
-    bas: process.env.NODE_ENV === 'production' ? '/jonas-amrouche.github.io' : ''
-}
+// vite.config.js
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  base: "/jonas-amrouche.github.io/",
+});
