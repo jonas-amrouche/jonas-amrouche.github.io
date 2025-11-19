@@ -36,7 +36,13 @@ scene.add(enterTextLabel);
 enterTextLabel.position.set(0, -3, 2);
 enterTextLabel.scale.set(0.005, 0.005, 0.005);
 
-// newProject("FireLive : audio mixing and live production software", "src/firelive_screen1.jpg", 0, -140)
+// Name Label
+// newText("Jonas Amrouche", "name-text", 0, 0, -147, 0.01)
+// newText("Developper", "dev-title-text", 0, -2, -149, 0.01)
+// newText("Interactive Experience", "dev-title-text", 0, 2, -149, 0.01)
+
+// Project Tabs
+// newProject("FireLive : audio mixing and live production software", "src/firelive_screen1.jpg", 0, -135)
 
 function newProject(title, imgPath, x, z){
   const titleP = document.createElement("p");
@@ -55,16 +61,17 @@ function newProject(title, imgPath, x, z){
   projectImg.scale.set(0.002, 0.002, 0.002);
 }
 
-// Name Label
-// const NameP = document.createElement("p");
-// NameP.textContent = "Jonas Amrouche";
-// NameP.id = "name-text";
-// const NameLabel = new CSS3DObject(NameP);
-// scene.add(NameLabel);
-// NameLabel.position.set(0, 3, -150);
-// NameLabel.scale.set(0.01, 0.01, 0.01);
-// NameLabel.visible = false;
-
+function newText(text, id, x, y, z, size){
+  const p = document.createElement("p");
+  p.textContent = text;
+  p.id = id;
+  const Label = new CSS3DObject(p);
+  scene.add(Label);
+  Label.position.set(x, y, z);
+  Label.scale.set(size, size, size);
+  Label.visible = true;
+  return Label
+}
 // Create glowy quad-ring
 const geometry = new THREE.RingGeometry( 2, 3, 4 );
 const rectangleColor = new THREE.Color( 'rgba(255, 255, 255, 1)' );
@@ -73,8 +80,8 @@ const torus = new THREE.Mesh(geometry, material);
 torus.position.set(0, 0, -2)
 scene.add(torus);
 
-// Create synthwave vibe plane grid
-const pageGridGeometry = new THREE.CylinderGeometry( 5, 5, 50, 50, 200);
+// Create animated wireframe tunel
+const pageGridGeometry = new THREE.CylinderGeometry( 5, 5, 25, 50, 100, true);
 const pageGridVertexShader = document.getElementById('buttonVertexShader').textContent;
 const pageGridFragmentShader = document.getElementById('buttonFragmentShader').textContent;
 const pageGridMaterial = new THREE.ShaderMaterial( {
@@ -128,6 +135,7 @@ const mixer = new THREE.AnimationMixer( loadingMesh );
 scene.add( loadingMesh );
 const mask = loadingMesh.getObjectByName("Mask");
 const Windows = loadingMesh.getObjectByName("Windows");
+const FireliveScene = loadingMesh.getObjectByName("FireliveScene");
 Windows.visible = false;
 Windows.frustumCulled = false;
 const loading_anim = play_clip(animLoaded, mixer, "loading", false);
@@ -136,6 +144,11 @@ const loading_anim = play_clip(animLoaded, mixer, "loading", false);
 const pointLight = new THREE.PointLight(0xffffff, 100)
 pointLight.position.set(0, 0, 3)
 scene.add(pointLight);
+
+// Project lights
+const projectLight = new THREE.PointLight(0xffffff, 2, 15)
+projectLight.position.set(0, 0, -142)
+scene.add(projectLight);
 
 // Add post-processing
 const composer = new EffectComposer( renderer );
@@ -146,11 +159,9 @@ const bloomPass = new UnrealBloomPass( resolution, 1, 0.4, 0.7 );
 composer.addPass( bloomPass );
 
 // Dev only
-let skipIntro = false;
+let skipIntro = true;
 if (skipIntro){
   camera.position.set(0, 0, -140);
-  camera.fov = 100;
-  camera.updateProjectionMatrix();
   torus.visible = false;
   mask.visible = false;
   Windows.visible = true;
@@ -170,7 +181,7 @@ function animate() {
   mixer.update(clock.getDelta());
   pageGrid.material.uniforms.uTime = {value : clock.elapsedTime};
 
-  updateCameraScroll();
+  updateScroll();
 
   triggerEnter();
   
@@ -179,9 +190,10 @@ function animate() {
   composer.render();
 }
 
-function updateCameraScroll(){
+function updateScroll(){
   if (introDone){
-    camera.position.set(camera.position.x, camera.position.y, scrollPercent*0.4 - 140);
+    FireliveScene.position.set(-scrollPercent*0.4, FireliveScene.position.y, FireliveScene.position.z);
+    // camera.position.set(scrollPercent*0.4, camera.position.y, camera.position.z);
   }
 }
 
@@ -237,10 +249,22 @@ function enter(){
                 gsap.to(obj, {
                   value: 1.0,
                   duration: 4.0,
-                  ease: "power4.in",
+                  ease: "expo.in",
                   onUpdate: () => {
                     ambientSound.setVolume(obj.value);
                   }
+                });
+                gsap.to(pageGrid.material.uniforms.uOpacity, {
+                  delay: 2.5,
+                  value: 1.0,
+                  duration: 2.0,
+                  ease: "power2.out",
+                });
+                gsap.to(camera, {
+                  delay: 2.5,
+                  fov: 75.0,
+                  duration: 1.0,
+                  ease: "power2.out",
                 });
                 gsap.to(camera.position, {
                   x: 0,
@@ -253,21 +277,12 @@ function enter(){
                   x: 0,
                   y: 0,
                   z: Math.PI*2.0,
-                  duration: 3,
+                  duration: 4,
                   ease: "power2.inOut",
                   onComplete: () => {
-                    
-                    // NameLabel.visible = true;
-                    gsap.to(pageGrid.material.uniforms.uOpacity, {
-                      value: 1.0,
-                      duration: 2.0,
-                      ease: "power2.In",
-                      onComplete: () => {
-                        introDone = true;
-                        document.querySelector('body').style.height = "7000px";
-                        window.scrollTo(0, 0);
-                      }
-                    });
+                      introDone = true;
+                      document.querySelector('body').style.height = "7000px";
+                      window.scrollTo(0, 0);
                   }
                 });
               }

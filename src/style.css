@@ -32,17 +32,37 @@ canvas {
   font-size: 300%;
   text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
 }
+
 div{
   position: fixed;
-
 }
 
-p{
+#name-text{
+  font-family: 'Lato';
   margin: auto;
-  font-family: 'Steps-Mono-Thin';
-  text-align: center;
-  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
   color: rgb(255, 255, 255);
   font-size: 600%;
+  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
 }
 
+#project-video{
+  border: 5px solid white;
+  filter: drop-shadow(0 0 50px white);
+  opacity: 50%;
+}
+
+#project-title{
+  font-family: 'Lato';
+  margin: auto;
+  color: rgb(255, 255, 255);
+  font-size: 600%;
+  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
+}
+
+#dev-title-text{
+  font-family: 'Lato';
+  margin: auto;
+  color: rgb(255, 255, 255);
+  font-size: 600%;
+  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
+}
