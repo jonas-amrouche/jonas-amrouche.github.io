@@ -42,23 +42,26 @@ enterTextLabel.scale.set(0.005, 0.005, 0.005);
 // newText("Interactive Experience", "dev-title-text", 0, 2, -149, 0.01)
 
 // Project Tabs
-// newProject("FireLive : audio mixing and live production software", "src/firelive_screen1.jpg", 0, -135)
+newProject("FireLive : audio mixing and live production software", "src/firelive_screen1.jpg", 0, -149)
 
 function newProject(title, imgPath, x, z){
   const titleP = document.createElement("p");
   titleP.textContent = title;
   titleP.id = "project-title";
+  titleP.setAttribute('class', "project-ui");
   const TitleLabel = new CSS3DObject(titleP);
   scene.add(TitleLabel);
-  TitleLabel.position.set(x, 2, z);
+  TitleLabel.position.set(x+7, 2, z);
   TitleLabel.scale.set(0.005, 0.005, 0.005);
   const projectI = document.createElement("img");
   projectI.src = imgPath;
   projectI.id = "project-video";
+  projectI.setAttribute('class', "project-ui");
   const projectImg = new CSS3DObject(projectI);
   scene.add(projectImg);
-  projectImg.position.set(x, 0, z);
-  projectImg.scale.set(0.002, 0.002, 0.002);
+  projectImg.position.set(x-1.8, 0.2, z+0.5);
+  projectImg.scale.set(0.004, 0.004, 0.004);
+  projectImg.rotation.set(0, Math.PI/16.0, 0);
 }
 
 function newText(text, id, x, y, z, size){
@@ -72,6 +75,7 @@ function newText(text, id, x, y, z, size){
   Label.visible = true;
   return Label
 }
+
 // Create glowy quad-ring
 const geometry = new THREE.RingGeometry( 2, 3, 4 );
 const rectangleColor = new THREE.Color( 'rgba(255, 255, 255, 1)' );
@@ -141,12 +145,12 @@ Windows.frustumCulled = false;
 const loading_anim = play_clip(animLoaded, mixer, "loading", false);
 
 // Pointless Point light
-const pointLight = new THREE.PointLight(0xffffff, 100)
+const pointLight = new THREE.PointLight(0xffffff, 100, 10)
 pointLight.position.set(0, 0, 3)
 scene.add(pointLight);
 
 // Project lights
-const projectLight = new THREE.PointLight(0xffffff, 2, 15)
+const projectLight = new THREE.PointLight(0xffffff, 0, 15)
 projectLight.position.set(0, 0, -142)
 scene.add(projectLight);
 
@@ -192,8 +196,8 @@ function animate() {
 
 function updateScroll(){
   if (introDone){
-    FireliveScene.position.set(-scrollPercent*0.4, FireliveScene.position.y, FireliveScene.position.z);
-    // camera.position.set(scrollPercent*0.4, camera.position.y, camera.position.z);
+    // FireliveScene.position.set(-scrollPercent*0.4, FireliveScene.position.y, FireliveScene.position.z);
+    camera.position.set(scrollPercent*0.4, camera.position.y, camera.position.z);
   }
 }
 
@@ -245,15 +249,37 @@ function enter(){
               },
               onComplete: () => {
                 ambientSound.play();
-                let obj = { value: 0 };
-                gsap.to(obj, {
+                let soundObj = { value: 0 };
+                gsap.to(soundObj, {
                   value: 1.0,
                   duration: 4.0,
                   ease: "expo.in",
                   onUpdate: () => {
-                    ambientSound.setVolume(obj.value);
+                    ambientSound.setVolume(soundObj.value);
                   }
                 });
+
+                let opacityObj = { value: 0 };
+                gsap.to(opacityObj, {
+                  value: 100.0,
+                  delay:2.0,
+                  duration: 2.0,
+                  ease: "expo.in",
+                  onUpdate: () => {
+                    var elements = document.querySelectorAll('.project-ui');
+                    for(var i=0; i<elements.length; i++){
+                        elements[i].style.opacity = (opacityObj.value).toString() + "%";
+                    }
+                  }
+                });
+
+                gsap.to(projectLight, {
+                  intensity: 2,
+                  delay:2.0,
+                  duration: 5,
+                  ease: "power2.inOut",
+                });
+                    
                 gsap.to(pageGrid.material.uniforms.uOpacity, {
                   delay: 2.5,
                   value: 1.0,

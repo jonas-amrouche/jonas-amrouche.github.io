@@ -46,10 +46,11 @@ div{
 }
 
 #project-video{
-  border: 5px solid white;
-  filter: drop-shadow(0 0 50px white);
-  opacity: 50%;
+  /* border: 5px solid white; */
+  /* filter: drop-shadow(0 0 50px white); */
+  /* opacity: 50%; */
 }
+
 
 #project-title{
   font-family: 'Lato';
@@ -57,6 +58,10 @@ div{
   color: rgb(255, 255, 255);
   font-size: 600%;
   text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
+}
+
+.project-ui{
+  opacity: 0%;
 }
 
 #dev-title-text{
