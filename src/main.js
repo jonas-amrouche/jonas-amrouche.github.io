@@ -42,7 +42,7 @@ enterTextLabel.scale.set(0.005, 0.005, 0.005);
 // newText("Interactive Experience", "dev-title-text", 0, 2, -149, 0.01)
 
 // Project Tabs
-newProject("FireLive : audio mixing and live production software", "src/firelive_screen1.jpg", 0, -149)
+newProject("FireLive : audio mixing and live production software", "/firelive_screen1.jpg", 0, -149)
 
 function newProject(title, imgPath, x, z){
   const titleP = document.createElement("p");
@@ -119,7 +119,7 @@ const loadingSound = new THREE.Audio( listener );
 audioLoader.load( '/loading_loop.ogg', function( buffer ) {
   loadingSound.setBuffer( buffer );
   loadingSound.setLoop( true );
-  loadingSound.setVolume( 1.0 );
+  loadingSound.setVolume( 2.0 );
   loadingSound.play();
 });
 
@@ -128,7 +128,7 @@ const introSound = new THREE.Audio( listener );
 audioLoader.load( '/intro_sound.ogg', function( buffer ) {
   introSound.setBuffer( buffer );
   introSound.setLoop( false );
-  introSound.setVolume( 0.5 );
+  introSound.setVolume( 1.0 );
 });
 
 // Setup and play animations.gltf
@@ -251,7 +251,7 @@ function enter(){
                 ambientSound.play();
                 let soundObj = { value: 0 };
                 gsap.to(soundObj, {
-                  value: 1.0,
+                  value: 2.0,
                   duration: 4.0,
                   ease: "expo.in",
                   onUpdate: () => {
