@@ -1,12 +1,11 @@
 import './style.css'
 
 import * as THREE from 'three'
-import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { FXAAPass } from 'three/addons/postprocessing/FXAAPass.js';
-import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap/gsap-core';
@@ -16,22 +15,36 @@ const pageSize = 7000;
 let introDone = false;
 let screenTouched = false;
 let scrollPercent = 0;
+let popUpPage = false;
 
+// let ambienceLights = [];
 let projectLights = [];
 let videosPlayers = [];
 
 // Create 3D renderer
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg') });
 
-// Create 3D HTLM renderer
-const flatRenderer = new CSS3DRenderer();
+// Create 2D HTLM renderer
+const flatRenderer = new CSS2DRenderer();
 document.body.appendChild(flatRenderer.domElement);
-flatRenderer.domElement.id = "flat-render"
+flatRenderer.domElement.id = "flat-renderer"
 
 // Create scene and camera
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0, 8)
+
+// Add post-processing
+const composer = new EffectComposer( renderer );
+const renderPass = new RenderPass( scene, camera );
+composer.addPass( renderPass );
+const fxaaPass = new FXAAPass();
+composer.addPass( fxaaPass );
+const resolution = new THREE.Vector2( window.innerWidth, window.innerHeight );
+const bloomPass = new UnrealBloomPass( resolution, 0.5, 0.4, 0.7 );
+composer.addPass( bloomPass );
+const outputPass = new OutputPass();
+composer.addPass(outputPass);
 
 updateSreenSize();
 
@@ -43,8 +56,7 @@ const mixer = new THREE.AnimationMixer( loadingMesh );
 scene.add( loadingMesh );
 const mask = loadingMesh.getObjectByName("Mask");
 const Windows = loadingMesh.getObjectByName("Windows");
-const display1 = loadingMesh.getObjectByName("Display1");
-const display1hover = loadingMesh.getObjectByName("Display1Hover");
+const fireliveScreen = loadingMesh.getObjectByName("Firelive");
 Windows.visible = false;
 Windows.frustumCulled = false;
 const loading_anim = play_clip(animLoaded, mixer, "loading", false);
@@ -55,10 +67,9 @@ const textureLoader = new THREE.TextureLoader();
 const enterTextP = document.createElement("p");
 enterTextP.textContent = "click to enter my portfolio";
 enterTextP.id = "enter-text";
-const enterTextLabel = new CSS3DObject(enterTextP);
+const enterTextLabel = new CSS2DObject(enterTextP);
 scene.add(enterTextLabel);
 enterTextLabel.position.set(0, -3, 2);
-enterTextLabel.scale.set(0.005, 0.005, 0.005);
 
 // Name Label
 // newText("Jonas Amrouche", "name-text", 0, 0, -147, 0.01)
@@ -69,7 +80,7 @@ function newText(text, id, x, y, z, size){
   const p = document.createElement("p");
   p.textContent = text;
   p.id = id;
-  const Label = new CSS3DObject(p);
+  const Label = new CSS2DObject(p);
   scene.add(Label);
   Label.position.set(x, y, z);
   Label.scale.set(size, size, size);
@@ -87,8 +98,8 @@ scene.add(torus);
 
 // Create animated wireframe tunel
 const pageGridGeometry = new THREE.CylinderGeometry( 5, 5, 60, 50, 100, true);
-const pageGridVertexShader = document.getElementById('buttonVertexShader').textContent;
-const pageGridFragmentShader = document.getElementById('buttonFragmentShader').textContent;
+const pageGridVertexShader = document.getElementById('tunnelVertexShader').textContent;
+const pageGridFragmentShader = document.getElementById('tunnelFragmentShader').textContent;
 const pageGridMaterial = new THREE.ShaderMaterial( {
   vertexShader:pageGridVertexShader,
   fragmentShader:pageGridFragmentShader,
@@ -101,32 +112,6 @@ const pageGrid = new THREE.Mesh(pageGridGeometry, pageGridMaterial);
 pageGrid.position.set(0, 0, -130.0)
 pageGrid.rotation.set(Math.PI/2.0, 0, 0)
 scene.add(pageGrid);
-
-// Project Tabs
-newProject("FireLive", "/firelive_screen1.jpg", 0, -180)
-
-const display1Material = new THREE.MeshStandardMaterial( { map: textureLoader.load("/firelive_screen1_holo.jpg"), emissiveMap: textureLoader.load("/firelive_screen_emi.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true } );
-display1.material = display1Material;
-
-function newProject(title, imgPath, x, z){
-  // const titleP = document.createElement("p");
-  // titleP.textContent = title;
-  // titleP.id = "project-title";
-  // titleP.setAttribute('class', "project-ui");
-  // const TitleLabel = new CSS3DObject(titleP);
-  // scene.add(TitleLabel);
-  // TitleLabel.position.set(x-2, 4, z);
-  // TitleLabel.scale.set(0.005, 0.005, 0.005);
-  // const projectI = document.createElement("img");
-  // projectI.src = imgPath;
-  // projectI.id = "project-video";
-  // projectI.setAttribute('class', "project-ui");
-  // const projectImg = new CSS3DObject(projectI);
-  // scene.add(projectImg);
-  // projectImg.position.set(x, 0.2, z);
-  // projectImg.scale.set(0.004, 0.004, 0.004);
-  // projectImg.rotation.set(0, Math.PI/16.0, 0);
-}
 
 // Setup sounds
 const audioLoader = new THREE.AudioLoader();
@@ -166,11 +151,15 @@ scene.add(pointLight);
 // Create clock for animations
 const clock = new THREE.Clock();
 
-projectLights.push(projectLight("/flashreel.mov", 0, 0, 0))
+projectLights.push([projectLight("/flashreel.mov", 0, 0, 0), 100])
 
-projectLights.push(projectLight("/firelive_screen1_blured.jpg", -20, 0, -20.3))
+projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0, 0), 500])
 
-projectLights.push(projectLight("/eluminscreen1blured.jpg", 20, 0, 20.3))
+projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0, 0), 500])
+
+projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0, -20.3), 500])
+
+projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0, 20.3), 500])
 
 // Project lights
 function projectLight(texture_path, x_pos, z_pos, x_target) {
@@ -202,9 +191,19 @@ function projectLight(texture_path, x_pos, z_pos, x_target) {
   return projectLight
 }
 
-// const ambienceLight1 = new THREE.PointLight(0xff0000, 10, 10);
+// function ambienceLight(color, dist, intensity, x, y, z){
+//   const light = new THREE.PointLight(color, 0, dist);
+//   scene.add(light);
+//   light.position.set(x, y, z);
+//   ambienceLights.push([light, intensity])
+// }
+
+// const ambienceLight1 = new THREE.PointLight(0xff0000, 10, 20);
 // scene.add(ambienceLight1);
 // ambienceLight1.position.set(-21, -0.2, -172);
+
+// ambienceLight(0xffffff, 10, 7, 0, 2, -172)
+
 // const ambienceLight2 = new THREE.PointLight(0xffffff, 10, 7);
 // scene.add(ambienceLight2);
 // ambienceLight2.position.set(0, 2, -172);
@@ -214,35 +213,19 @@ function projectLight(texture_path, x_pos, z_pos, x_target) {
 
 const raycaster = new THREE.Raycaster();
 
-// Add post-processing
-const composer = new EffectComposer( renderer );
-const renderPass = new RenderPass( scene, camera );
-composer.addPass( renderPass );
-const fxaaPass = new FXAAPass();
-composer.addPass( fxaaPass );
-const resolution = new THREE.Vector2( window.innerWidth, window.innerHeight );
-const bloomPass = new UnrealBloomPass( resolution, 0.5, 0.4, 0.7 );
-// const bloomPass = new UnrealBloomPass( resolution, 0.2, 0.1, 0.5 );
-composer.addPass( bloomPass );
-// const bokehPass = new BokehPass( scene, camera, {focus: 9.35,aperture: 0.001,maxblur: 0.1});
-// bokehPass.setSize(window.innerWidth, window.innerHeight)
-// composer.addPass( bokehPass );
-const outputPass = new OutputPass();
-composer.addPass(outputPass);
-
+const fireliveScreenMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/firelive_screen_emi.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
+fireliveScreen.material = fireliveScreenMaterial;
 
 addEventListener("mousemove", (event) => {
   const coords = new THREE.Vector2(event.clientX / renderer.domElement.clientWidth * 2 - 1, -(event.clientY / renderer.domElement.clientHeight * 2 - 1));
   raycaster.setFromCamera(coords, camera);
   const intersections = raycaster.intersectObjects(scene.children, true);
   if (intersections.length > 0){
-    if (intersections[0].object.name == "Display1"){
-      display1.material.emissiveIntensity = 1.0
-      display1hover.visible = true
+    if (intersections[0].object.name === "Firelive" && !popUpPage){
+      fireliveScreen.material.emissiveIntensity = 1.0;
       document.body.style.cursor = "pointer"
     } else{
-      display1.material.emissiveIntensity = 0.6
-      display1hover.visible = false
+      fireliveScreen.material.emissiveIntensity = 0.0
       document.body.style.cursor = "default"
 
     }
@@ -255,13 +238,19 @@ if (skipIntro){
   camera.position.set(0, 0, -167);
   camera.fov = 50.0;
   camera.updateProjectionMatrix();
+  play_clip(animLoaded, mixer, "floating", false)
   torus.visible = false;
   mask.visible = false;
-  display1.material.emissiveIntensity = 0.6
   Windows.visible = true;
+
   for(var i=0; i<projectLights.length; i++){
-    projectLights[i].intensity = 50;
+    projectLights[i][0].intensity = projectLights[i][1];
   }
+
+  // for(var i=0; i<ambienceLights.length; i++){
+  //   ambienceLights[i][0].intensity = ambienceLights[i][1];
+  // }
+
   var elements = document.querySelectorAll('.project-ui');
   for(var i=0; i<elements.length; i++){
     elements[i].style.opacity = "100%";
@@ -269,9 +258,8 @@ if (skipIntro){
   pageGrid.material.uniforms.uOpacity = {value : 1.0}
   introDone = true;
   document.querySelector('body').style.height = pageSize.toString() + "px";
-  window.scrollTo(0, pageSize/2 - window.innerHeight/2);
+  // window.scrollTo(0, pageSize/2 - window.innerHeight/2);
 }
-
 
 function animate() {
   requestAnimationFrame(animate);
@@ -291,8 +279,7 @@ function animate() {
 
 function updateScroll(){
   if (introDone){
-    // FireliveScene.position.set(-scrollPercent*0.4, FireliveScene.position.y, FireliveScene.position.z);
-    camera.position.set((scrollPercent-50)*0.4, camera.position.y, camera.position.z);
+    camera.position.set((scrollPercent-50), camera.position.y, camera.position.z);
   }
 }
 
@@ -356,29 +343,28 @@ function enter(){
                   }
                 });
 
-                let opacityObj = { value: 0 };
-                gsap.to(opacityObj, {
-                  value: 100.0,
-                  delay:2.0,
-                  duration: 2.0,
-                  ease: "expo.in",
-                  onUpdate: () => {
-                    var elements = document.querySelectorAll('.project-ui');
-                    for(var i=0; i<elements.length; i++){
-                        elements[i].style.opacity = (opacityObj.value).toString() + "%";
-                    }
-                  }
-                });
+                // let ambienceObj = { value: 0 };
+                // gsap.to(ambienceObj, {
+                //   value: 1.0,
+                //   delay:3.0,
+                //   duration: 5.0,
+                //   ease: "expo.in",
+                //   onUpdate: () => {
+                //     for(var i=0; i<ambienceLights.length; i++){
+                //       ambienceLights[i][0].intensity = ambienceLights[i][1] * ambienceObj.value;
+                //     }
+                //   }
+                // });
 
                 let projectorsObj = { value: 0 };
                 gsap.to(projectorsObj, {
-                  value: 50.0,
-                  delay:3,
-                  duration: 5,
+                  value: 1.0,
+                  delay:4.0,
+                  duration: 2,
                   ease: "power2.inOut",
                   onUpdate: () => {
                     for(var i=0; i<projectLights.length; i++){
-                        projectLights[i].intensity = projectorsObj.value;
+                      projectLights[i][0].intensity = projectLights[i][1] * projectorsObj.value;
                     }
                   }
                 });
@@ -416,7 +402,7 @@ function enter(){
                       videosPlayers[i].play()
                     }
                     introDone = true;
-                    display1.material.emissiveIntensity = 0.6
+                    play_clip(animLoaded, mixer, "floating", false)
                     document.querySelector('body').style.height = pageSize.toString() + "px";
                     window.scrollTo(0, pageSize/2 - window.innerHeight/2);
                   }
@@ -434,24 +420,84 @@ window.addEventListener('resize', function(){
 })
 
 function updateSreenSize(){
+  console.log('rr')
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight)
   flatRenderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 }
 
-window.addEventListener("click", () => {
-  // for(var i=0; i<videosPlayers.length; i++){
-  //   videosPlayers[i].play()
-  // }
+const infoContainer = document.getElementById('infosContainer')
 
-  if (skipIntro){ return; }
+infoContainer.addEventListener('click', () =>{
+  document.querySelector('body').style.overflow = "auto"
+    document.getElementById('bg').style.pointerEvents= "all";
+    document.getElementById('infosContainer').style.visibility = "hidden"
+    document.getElementById('Firelive').style.visibility = "hidden"
+    popUpPage = false
+})
+
+window.addEventListener("click", () => {
+  const intersections = raycaster.intersectObjects(scene.children, true);
+  if (intersections[0].object.name === "Firelive"){
+    document.querySelector('body').style.overflow = "hidden"
+    document.getElementById('bg').style.pointerEvents= "none";
+    document.getElementById('infosContainer').style.visibility = "visible"
+    document.getElementById('Firelive').style.visibility = "visible"
+    document.getElementById('Firelive').scrollTo(0, 0)
+    popUpPage = true
+  }
+
+  if (skipIntro){
+    for(var i=0; i<videosPlayers.length; i++){
+      videosPlayers[i].play()
+    }
+    return;
+  }
 
   screenTouched = true
   enterTextLabel.visible = false
   ambientSound.play();
 });
+
+// Project Tabs
+
+
+// showProject("FireLive")
+
+// function showProject(title){
+
+// }
+// const projectDoc = document.getElementById("firelive")
+// const projectContainer = document.createElement('div');
+// projectContainer.className = 'project-container';
+// projectContainer.id = 'firelive';
+// document.body.removeChild(projectContainer)
+// const projectTab = new CSS2DObject(projectContainer);
+// scene.add(projectTab);
+// projectTab.position.set(0, 0, -178);
+
+// function newProject(title, imgPath, x, z){
+  // const titleP = document.createElement("p");
+  // titleP.textContent = title;
+  // titleP.id = "project-title";
+  // titleP.setAttribute('class', "project-ui");
+  // const TitleLabel = new CSS3DObject(titleP);
+  // scene.add(TitleLabel);
+  // TitleLabel.position.set(x-2, 4, z);
+  // TitleLabel.scale.set(0.005, 0.005, 0.005);
+  // const projectI = document.createElement("img");
+  // projectI.src = imgPath;
+  // projectI.id = "project-video";
+  // projectI.setAttribute('class', "project-ui");
+  // const projectImg = new CSS3DObject(projectI);
+  // scene.add(projectImg);
+  // projectImg.position.set(x, 0.2, z);
+  // projectImg.scale.set(0.004, 0.004, 0.004);
+  // projectImg.rotation.set(0, Math.PI/16.0, 0);
+// }
 
 document.body.onscroll = () => {
     scrollPercent = ((document.documentElement.scrollTop || document.body.scrollTop) / ((document.documentElement.scrollHeight || document.body.scrollHeight) - document.documentElement.clientHeight)) * 100;

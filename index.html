@@ -10,8 +10,35 @@
     <title>Jonas Amrouche</title>
   </head>
   <body>
+    <h1 id="loading-text">LOADING...</h1>
     <canvas id="bg"></canvas>
-    <p style="visibility: hidden;" id="buttonVertexShader">
+
+    <a id="infosContainer">
+      <div class="project-container" id="Firelive">
+        <h1 class="project-title">Firelive :</h1>
+        <p class="project-text">The idea for this project was to make a software for <strong>live mixing</strong> and <strong>live producing</strong> with <strong>integrated loop buffers</strong>, <strong>entirely customizable</strong> and <strong>usable with any custom controllers</strong>.
+          <br><br>
+          It's not completed as it lacks lots of features I have in mind, but the basics are there.
+          <br><br>
+          I made the first working version in 1 week and used it in a little 30 mintue set, and it was quite fun.
+          I made it with Godot Engine to iterate fast on the UI side, and to use the Godot Audio Engine.
+          After the first week I refactored all my code, fix some bugs, polished some features, and start working on a C++ gdextension for all the computing intensive task, like generating the audio spectrum or adding additional audio effect.
+          <br>
+          <img src="src/zebra.jpg"></img>
+          <br><br>
+          Before Firelive I had already developped a little application game called <strong>Firestage</strong>.
+          <br><br>
+          <img src="src/zebra.jpg"></img>
+          <br>
+          It's a VJing app, not as advanced, where you can mess with light, smokes, fire and laser in front of a crowd, it's not really advanced, as it was supposed to be customizable, but it's fun to play.
+          <br><br>
+          I love live shows, lightning and audio techniques that hyped up a crowd, and I hope I can one day work on something like that.
+        </p>
+      </div>
+    </a>
+    <a id="toggleSoundButton"></a>
+    <a id="infoButton"></a>
+    <p style="visibility: hidden;" id="tunnelVertexShader">
       uniform float uTime;
 
       varying vec3 vPosition;
@@ -53,7 +80,7 @@
         vPosition = newPosition;
     }
     </p>
-    <p style="visibility: hidden;" id="buttonFragmentShader">
+    <p style="visibility: hidden;" id="tunnelFragmentShader">
       uniform float uTime;
       uniform float uOpacity;
       

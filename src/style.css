@@ -13,65 +13,84 @@ body {
   src: url('/src/Steps-Mono-Thin.woff2') format('woff2');
 }
 
-#flat-render {
+#flat-renderer {
   position : absolute;
   top : 0px;
   left : 0px;
-}
-
-#enter-button {
-  background-color: black;
-  border: 5px solid white;
-}
-
-#enter-button:hover {
-  background-color: white;
-  border: 5px solid white;
 }
 
 #enter-text{
   font-family: 'Steps-Mono-Thin';
   margin: auto;
   color: rgb(255, 255, 255);
-  font-size: 300%;
+  font-size: 200%;
   text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
 }
 
-div{
+#loading-text{
   position: fixed;
+  font-family: 'Steps-Mono-Thin';
+  font-weight: 900;
+  filter: drop-shadow(0 0 50px rgb(255, 255, 255));
+  margin: auto;
+  bottom: 20%;
+  left: 45%;
+  text-align: center;
+  color: rgb(255, 255, 255);
+  font-size: 300%;
 }
 
-#name-text{
+.project-container{
+  visibility: hidden;
+  position: fixed;
+  /* background-color: rgb(8, 10, 19); */
+  /* border: 2px solid rgb(245, 245, 245); */
+  padding: 1%;
+  padding-left: 2%;
+  padding-right: 2%;
+  filter: drop-shadow(0 0 30px rgb(51, 63, 88));
+  /* opacity: 90%; */
+  width: 40%;
+  height: 85%;
+  overflow: auto;
+  top: 5%;
+  left: 30%;
+  pointer-events: all;
+}
+
+#infosContainer{
+  visibility: hidden;
+  position: fixed;
+  top: 0%;
+  bottom: 0%;
+  right: 0%;
+  left: 0%;
+  background-color: rgb(0, 0, 0);
+  opacity: 80%;
+}
+
+#toggleSoundButton{
+  
+}
+
+#infoButton{
+  
+}
+
+.project-title{
   font-family: 'Lato';
   margin: auto;
+  text-align: center;
   color: rgb(255, 255, 255);
-  font-size: 600%;
-  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
+  font-size: 300%;
+  filter: drop-shadow(4px 4px 0px black);
 }
 
-#project-video{
-  /* border: 5px solid white; */
-  /* filter: drop-shadow(0 0 50px white); */
-  /* opacity: 50%; */
-}
-
-
-#project-title{
+.project-text{
   font-family: 'Lato';
   margin: auto;
+  text-align: justify;
+  margin-top: 2%;
   color: rgb(255, 255, 255);
-  font-size: 600%;
-  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
-}
-
-.project-ui{
-  opacity: 100%;
-}
-
-#dev-title-text{
-  font-family: 'Lato';
-  margin: auto;
-  color: rgb(255, 255, 255);
-  font-size: 600%;
-  text-shadow : 0 0 8px white, 0 0 24px rgba(255, 255, 255, 0.199);
+  font-size: 130%;
 }
