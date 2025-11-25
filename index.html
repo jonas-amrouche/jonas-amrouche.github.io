@@ -13,31 +13,96 @@
     <h1 id="loading-text">LOADING...</h1>
     <canvas id="bg"></canvas>
 
-    <a id="infosContainer">
-      <div class="project-container" id="Firelive">
-        <h1 class="project-title">Firelive :</h1>
+    <a id="backContainer"></a>
+    <div class="project-container" id="Firelive">
+      <h1 class="project-title">FireLive</h1>
+      <div class="project-text-container" >
         <p class="project-text">The idea for this project was to make a software for <strong>live mixing</strong> and <strong>live producing</strong> with <strong>integrated loop buffers</strong>, <strong>entirely customizable</strong> and <strong>usable with any custom controllers</strong>.
           <br><br>
-          It's not completed as it lacks lots of features I have in mind, but the basics are there.
+          It's not complete as it lacks lots of features I have in mind, but the basics are there.
           <br><br>
           I made the first working version in 1 week and used it in a little 30 mintue set, and it was quite fun.
           I made it with Godot Engine to iterate fast on the UI side, and to use the Godot Audio Engine.
           After the first week I refactored all my code, fix some bugs, polished some features, and start working on a C++ gdextension for all the computing intensive task, like generating the audio spectrum or adding additional audio effect.
           <br>
-          <img src="src/zebra.jpg"></img>
+          <img src="src/zebra.jpg">
           <br><br>
           Before Firelive I had already developped a little application game called <strong>Firestage</strong>.
           <br><br>
-          <img src="src/zebra.jpg"></img>
+          <img src="src/zebra.jpg">
           <br>
           It's a VJing app, not as advanced, where you can mess with light, smokes, fire and laser in front of a crowd, it's not really advanced, as it was supposed to be customizable, but it's fun to play.
           <br><br>
           I love live shows, lightning and audio techniques that hyped up a crowd, and I hope I can one day work on something like that.
         </p>
       </div>
-    </a>
-    <a id="toggleSoundButton"></a>
-    <a id="infoButton"></a>
+    </div>
+
+    <div class="project-container" id="Bio">
+      <h1 class="project-title">About Me</h1>
+      <div class="project-text-container" >
+        <p class="project-text">
+          I'm a <strong>french 21 years old selftaught creative developer</strong> who love to build things.
+          <br><br>
+          I have completed 1 year of IT study before realizing that the rigid academic way of learning was not the right thing for me.
+          <br><br>
+          On the other hand, <strong>I love working in a team</strong> and <strong>finding ways to bring a creative vision to life</strong> through technology.
+          <br><br>
+          I am now searching for a job in <strong>interactive experience, museography or live events</strong>.
+          <br><br>
+          I love <strong>video games</strong>, <strong>stories</strong>, <strong>climbing</strong> and <strong>having a good time with friends</strong>. -->
+        </p>
+      </div>
+    </div>
+
+    <div class="project-container" id="DevInfos">
+      <h1 class="project-title">Behind the scenes</h1>
+      <div class="project-text-container" >
+        <p class="project-text">
+          This portfolio was put together in 2 weeks, <strong>I made all the assets from scratch</strong>, except the fonts used.
+          <br><br>
+          It's powered by <strong>three.js</strong>, github-pages with <strong>CI/CD</strong>, <strong>node.js</strong>, <strong>vite</strong> and the rest is in <strong>vanilla javascript</strong>.
+          <br><br>
+
+          <!-- LA BIO DEVRAIT être a part
+          I'm a <strong>french 21 years old selftaught creative developer</strong> who love to build things.
+          <br><br>
+          I have completed 1 year of IT study before realizing that the rigid academic way of learning was not the right thing for me.
+          <br><br>
+          On the other hand, <strong>I love working in a team</strong> and <strong>finding ways to bring a creative vision to life</strong> through technology.
+          <br><br>
+          I am now searching for a job in <strong>interactive experience, museography or live events</strong>.
+          <br><br>
+          I love <strong>video games</strong>, <strong>stories</strong>, <strong>climbing</strong> and <strong>having a good time with friends</strong>. -->
+
+          Here are some screenshots of this portfolio R&D / Development :
+          <br><br>
+          <img class="project-screenshot" src="src/bts_1.jpg">
+          <p class="project-italic-infos">Experiment with a synthwave 80s style.</p>
+          <br><br>
+          <img class="project-screenshot" src="src/bts_2.jpg">
+          <p class="project-italic-infos">Early attempt of a more colorfull approach, it was kind of cool but a bit to alien and more difficult to spatially separate each project scenes.</p>
+          <br><br>
+          <img class="project-screenshot" src="src/bts_3.jpg">
+          <p class="project-italic-infos" >On the way to final result.</p>
+          <br><br>
+        </p>
+        <p class="project-text">
+          Also if you are curious, you can <a href="https://jonas-amrouche.github.io/games/">check out</a> my previous portfolio, it was less technical and more centered around games.
+        </p>
+          
+      </div>
+    </div>
+
+    <button id="devInfoButton" class="basicButton">
+      <img class="inner_button_icon" style="top: 17%; right: 30%;" src="src/more_icon.svg">
+    </button>
+
+    <button id="toggleSoundButton" class="basicButton">
+      <img class="inner_button_icon" style="top: 15.75%; left: 22%; visibility: hidden;" id="muted-icon" src="src/mute_sound_icon.svg">
+      <img class="inner_button_icon" style="top: 16.25%; left: 19.5%;" id="not-muted-icon" src="src/sound_icon.svg">
+    </button>
+
     <p style="visibility: hidden;" id="tunnelVertexShader">
       uniform float uTime;
 

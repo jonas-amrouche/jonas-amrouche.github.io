@@ -25,3 +25,5 @@ dist-ssr
 *.mov
 *.mp4
 *.mkv
+
+edits/*

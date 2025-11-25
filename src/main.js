@@ -15,7 +15,8 @@ const pageSize = 7000;
 let introDone = false;
 let screenTouched = false;
 let scrollPercent = 0;
-let popUpPage = false;
+let volumeMuted = false;
+let projectShown = "";
 
 // let ambienceLights = [];
 let projectLights = [];
@@ -151,7 +152,7 @@ scene.add(pointLight);
 // Create clock for animations
 const clock = new THREE.Clock();
 
-projectLights.push([projectLight("/flashreel.mov", 0, 0, 0), 100])
+projectLights.push([projectLight("/flashreel.webm", 0, 0, 0), 100])
 
 projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0, 0), 500])
 
@@ -164,7 +165,7 @@ projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0, 20.3), 5
 // Project lights
 function projectLight(texture_path, x_pos, z_pos, x_target) {
   let texture;
-  if (texture_path.split('.')[texture_path.split('.').length-1] == "mov"){
+  if (texture_path.split('.')[texture_path.split('.').length-1] == "webm"){
     // Create video and play
     const textureVid = document.createElement("video")
     textureVid.src = texture_path; // transform gif to mp4
@@ -216,24 +217,28 @@ const raycaster = new THREE.Raycaster();
 const fireliveScreenMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/firelive_screen_emi.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
 fireliveScreen.material = fireliveScreenMaterial;
 
-addEventListener("mousemove", (event) => {
+document.getElementById("bg").addEventListener("mousemove", (event) => {
   const coords = new THREE.Vector2(event.clientX / renderer.domElement.clientWidth * 2 - 1, -(event.clientY / renderer.domElement.clientHeight * 2 - 1));
   raycaster.setFromCamera(coords, camera);
   const intersections = raycaster.intersectObjects(scene.children, true);
   if (intersections.length > 0){
-    if (intersections[0].object.name === "Firelive" && !popUpPage){
-      fireliveScreen.material.emissiveIntensity = 1.0;
-      document.body.style.cursor = "pointer"
-    } else{
-      fireliveScreen.material.emissiveIntensity = 0.0
-      document.body.style.cursor = "default"
-
-    }
+    updateHover3D(intersections[0].object.name);
   }
  })
 
+function updateHover3D(targetName){
+  if (targetName === "Firelive"){
+    fireliveScreen.material.emissiveIntensity = 1.0;
+    document.body.style.cursor = "pointer";
+  } else{
+    fireliveScreen.material.emissiveIntensity = 0.0
+    document.body.style.cursor = "default";
+
+  }
+}
+
 // Dev only
-let skipIntro = false;
+let skipIntro = true;
 if (skipIntro){
   camera.position.set(0, 0, -167);
   camera.fov = 50.0;
@@ -420,7 +425,6 @@ window.addEventListener('resize', function(){
 })
 
 function updateSreenSize(){
-  console.log('rr')
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight)
@@ -429,25 +433,16 @@ function updateSreenSize(){
   camera.updateProjectionMatrix();
 }
 
-const infoContainer = document.getElementById('infosContainer')
+const backContainer = document.getElementById('backContainer')
 
-infoContainer.addEventListener('click', () =>{
-  document.querySelector('body').style.overflow = "auto"
-    document.getElementById('bg').style.pointerEvents= "all";
-    document.getElementById('infosContainer').style.visibility = "hidden"
-    document.getElementById('Firelive').style.visibility = "hidden"
-    popUpPage = false
+backContainer.addEventListener('click', () =>{
+  closeProject()
 })
 
-window.addEventListener("click", () => {
+document.getElementById("bg").addEventListener("click", () => {
   const intersections = raycaster.intersectObjects(scene.children, true);
   if (intersections[0].object.name === "Firelive"){
-    document.querySelector('body').style.overflow = "hidden"
-    document.getElementById('bg').style.pointerEvents= "none";
-    document.getElementById('infosContainer').style.visibility = "visible"
-    document.getElementById('Firelive').style.visibility = "visible"
-    document.getElementById('Firelive').scrollTo(0, 0)
-    popUpPage = true
+    showProject("Firelive")
   }
 
   if (skipIntro){
@@ -462,42 +457,50 @@ window.addEventListener("click", () => {
   ambientSound.play();
 });
 
-// Project Tabs
+function showProject(projectName){
+  console.log
+  closeProject(projectShown)
+  document.querySelector('body').style.overflow = "hidden";
+  document.getElementById('bg').style.pointerEvents= "none";
+  document.getElementById('backContainer').style.visibility = "visible";
+  document.getElementById(projectName).style.visibility = "visible";
+  document.getElementById(projectName).scrollTo(0, 0);
+  projectShown = projectName;
+  updateHover3D("");
+}
 
+function closeProject(){
+  if (projectShown !== ""){
+    document.querySelector('body').style.overflow = "auto";
+    document.getElementById('bg').style.pointerEvents= "all";
+    document.getElementById('backContainer').style.visibility = "hidden";
+    document.getElementById(projectShown).style.visibility = "hidden";
+    projectShown = "";
+  }
+}
 
-// showProject("FireLive")
+document.getElementById("toggleSoundButton").addEventListener("click", () => {
+  if (volumeMuted){
+    ambientSound.setVolume(2.0)
+    introSound.setVolume(1.0);
+    document.getElementById("not-muted-icon").style.visibility = "visible";
+    document.getElementById("muted-icon").style.visibility = "hidden";
+  }else{
+    ambientSound.setVolume(0.0);
+    introSound.setVolume(0.0);
+    document.getElementById("not-muted-icon").style.visibility = "hidden";
+    document.getElementById("muted-icon").style.visibility = "visible";
+  }
+  volumeMuted = !volumeMuted;
+});
 
-// function showProject(title){
-
-// }
-// const projectDoc = document.getElementById("firelive")
-// const projectContainer = document.createElement('div');
-// projectContainer.className = 'project-container';
-// projectContainer.id = 'firelive';
-// document.body.removeChild(projectContainer)
-// const projectTab = new CSS2DObject(projectContainer);
-// scene.add(projectTab);
-// projectTab.position.set(0, 0, -178);
-
-// function newProject(title, imgPath, x, z){
-  // const titleP = document.createElement("p");
-  // titleP.textContent = title;
-  // titleP.id = "project-title";
-  // titleP.setAttribute('class', "project-ui");
-  // const TitleLabel = new CSS3DObject(titleP);
-  // scene.add(TitleLabel);
-  // TitleLabel.position.set(x-2, 4, z);
-  // TitleLabel.scale.set(0.005, 0.005, 0.005);
-  // const projectI = document.createElement("img");
-  // projectI.src = imgPath;
-  // projectI.id = "project-video";
-  // projectI.setAttribute('class', "project-ui");
-  // const projectImg = new CSS3DObject(projectI);
-  // scene.add(projectImg);
-  // projectImg.position.set(x, 0.2, z);
-  // projectImg.scale.set(0.004, 0.004, 0.004);
-  // projectImg.rotation.set(0, Math.PI/16.0, 0);
-// }
+document.getElementById("devInfoButton").addEventListener("click", () => {
+  if (projectShown === "DevInfos"){
+    closeProject();
+  }else{
+    showProject("DevInfos");
+  }
+});
 
 document.body.onscroll = () => {
     scrollPercent = ((document.documentElement.scrollTop || document.body.scrollTop) / ((document.documentElement.scrollHeight || document.body.scrollHeight) - document.documentElement.clientHeight)) * 100;
