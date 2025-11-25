@@ -9,7 +9,7 @@ body {
 }
 
 a {
-    color: inherit;
+    color: skyblue;
 }
 
 @font-face {
@@ -21,6 +21,7 @@ a {
   position : absolute;
   top : 0px;
   left : 0px;
+  pointer-events: none;
 }
 
 #enter-text{
@@ -53,6 +54,7 @@ a {
   height: 80%;
   top: 5%;
   left: 25%;
+  opacity: 0%;
   pointer-events: all;
 }
 
@@ -128,17 +130,22 @@ a {
 }
 
 .project-screenshot{
+  margin: auto;
+  width: 100%;
+  border-radius: 10px;
+}
+
+.project-screenshot-container{
   position: relative;
   width: 50%;
   left: 25%;
-  text-align: center;
-  border-radius: 10px;
 }
 
 .project-italic-infos{
   font-family: 'Lato';
   text-align: center;
   font-style: italic;
+  margin-top: 1%;
   font-size: 130%;
   color: rgb(204, 204, 204);
 }

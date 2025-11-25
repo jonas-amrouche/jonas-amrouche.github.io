@@ -238,7 +238,7 @@ function updateHover3D(targetName){
 }
 
 // Dev only
-let skipIntro = true;
+let skipIntro = false;
 if (skipIntro){
   camera.position.set(0, 0, -167);
   camera.fov = 50.0;
@@ -458,24 +458,60 @@ document.getElementById("bg").addEventListener("click", () => {
 });
 
 function showProject(projectName){
-  console.log
-  closeProject(projectShown)
+  closeProject(projectShown);
+
+  const projectContainer = document.getElementById(projectName);
+  const backContainer = document.getElementById("backContainer");
+  
+  let opacityObj = { value: 0.0 };
+  gsap.to(opacityObj, {
+    value: 1.0,
+    duration: 0.5,
+    ease: "power2.inOut",
+    onUpdate: () => {
+      projectContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
+      backContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
+    }
+  });
+
   document.querySelector('body').style.overflow = "hidden";
   document.getElementById('bg').style.pointerEvents= "none";
-  document.getElementById('backContainer').style.visibility = "visible";
-  document.getElementById(projectName).style.visibility = "visible";
-  document.getElementById(projectName).scrollTo(0, 0);
+  backContainer.style.visibility = "visible";
+  projectContainer.style.visibility = "visible";
+
+  const projectTexts = document.getElementsByClassName("project-text-container");
+  for(var i=0; i<projectTexts.length; i++){
+    projectTexts[i].scrollTo(0, 0);
+  }
+
   projectShown = projectName;
   updateHover3D("");
 }
 
 function closeProject(){
   if (projectShown !== ""){
+
+    const projectContainer = document.getElementById(projectShown);
+    const backContainer = document.getElementById("backContainer");
+
+    let opacityObj = { value: 1.0 };
+    gsap.to(opacityObj, {
+      value: 0.0,
+      duration: 0.5,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        projectContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
+        backContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
+      },
+      onComplete: () => {
+        backContainer.style.visibility = "hidden";
+        projectContainer.style.visibility = "hidden";
+      }
+    });
     document.querySelector('body').style.overflow = "auto";
     document.getElementById('bg').style.pointerEvents= "all";
-    document.getElementById('backContainer').style.visibility = "hidden";
-    document.getElementById(projectShown).style.visibility = "hidden";
     projectShown = "";
+
   }
 }
 
@@ -483,11 +519,13 @@ document.getElementById("toggleSoundButton").addEventListener("click", () => {
   if (volumeMuted){
     ambientSound.setVolume(2.0)
     introSound.setVolume(1.0);
+    loadingSound.setVolume(2.0);
     document.getElementById("not-muted-icon").style.visibility = "visible";
     document.getElementById("muted-icon").style.visibility = "hidden";
   }else{
     ambientSound.setVolume(0.0);
     introSound.setVolume(0.0);
+    loadingSound.setVolume(0.0);
     document.getElementById("not-muted-icon").style.visibility = "hidden";
     document.getElementById("muted-icon").style.visibility = "visible";
   }
