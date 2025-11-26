@@ -260,7 +260,7 @@ if (skipIntro){
   scrollTarget = 50.0
   scrollPercent = 50.0
   previousScrollPercent = 50.0
-  scrollBox.scrollTo(0, 2000.0)
+  scrollBox.scrollTo(0, 2100.0)
 }
 
 function animate() {
@@ -493,7 +493,9 @@ function enter(){
                   duration: 4.0,
                   ease: "expo.in",
                   onUpdate: () => {
+                    if (!volumeMuted){
                     ambientSound.setVolume(soundObj.value);
+                    }
                   }
                 });
 
@@ -553,7 +555,7 @@ function enter(){
                     scrollTarget = 50.0
                     scrollPercent = 50.0
                     previousScrollPercent = 50.0
-                    scrollBox.scrollTo(0, 2000.0)
+                    scrollBox.scrollTo(0, 2100.0)
                   }
                 });
               }
