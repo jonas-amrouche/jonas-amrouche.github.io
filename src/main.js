@@ -14,13 +14,15 @@ const pageSize = 7000;
 
 let introDone = false;
 let screenTouched = false;
+let waitTransition = false;
 let scrollPercent = 0;
 let volumeMuted = false;
 let projectShown = "";
 
-// let ambienceLights = [];
 let projectLights = [];
 let videosPlayers = [];
+
+let projects = ["Firelive", "Elumin"]
 
 // Create 3D renderer
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg') });
@@ -57,12 +59,22 @@ const mixer = new THREE.AnimationMixer( loadingMesh );
 scene.add( loadingMesh );
 const mask = loadingMesh.getObjectByName("Mask");
 const Windows = loadingMesh.getObjectByName("Windows");
-const fireliveScreen = loadingMesh.getObjectByName("Firelive");
 Windows.visible = false;
 Windows.frustumCulled = false;
-const loading_anim = play_clip(animLoaded, mixer, "loading", false);
 
+// Setup texture loader
 const textureLoader = new THREE.TextureLoader();
+
+// Declare projects 3D buttons and assign materials
+const fireliveScreen = loadingMesh.getObjectByName("Firelive");
+const fireliveScreenMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/firelive_screen_emi.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
+fireliveScreen.material = fireliveScreenMaterial;
+const eluminScreen = loadingMesh.getObjectByName("Elumin");
+const eluminScreenMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/elumin_screenshot2.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
+eluminScreen.material = eluminScreenMaterial
+
+// Play loading animation
+const loading_anim = play_clip(animLoaded, mixer, "loading", false);
 
 // Enter Text Label
 const enterTextP = document.createElement("p");
@@ -71,23 +83,6 @@ enterTextP.id = "enter-text";
 const enterTextLabel = new CSS2DObject(enterTextP);
 scene.add(enterTextLabel);
 enterTextLabel.position.set(0, -3, 2);
-
-// Name Label
-// newText("Jonas Amrouche", "name-text", 0, 0, -147, 0.01)
-// newText("Developper", "dev-title-text", 0, -2, -149, 0.01)
-// newText("Interactive Experience", "dev-title-text", 0, 2, -149, 0.01)
-
-function newText(text, id, x, y, z, size){
-  const p = document.createElement("p");
-  p.textContent = text;
-  p.id = id;
-  const Label = new CSS2DObject(p);
-  scene.add(Label);
-  Label.position.set(x, y, z);
-  Label.scale.set(size, size, size);
-  Label.visible = true;
-  return Label
-}
 
 // Create glowy quad-ring
 const geometry = new THREE.RingGeometry( 2, 3, 4 );
@@ -144,7 +139,7 @@ audioLoader.load( '/intro_sound.ogg', function( buffer ) {
   introSound.setVolume( 1.0 );
 });
 
-// Pointless Point light
+// Quad Ring Point light
 const pointLight = new THREE.PointLight(0xffffff, 100, 10);
 pointLight.position.set(0, 0, 3);
 scene.add(pointLight);
@@ -153,14 +148,10 @@ scene.add(pointLight);
 const clock = new THREE.Clock();
 
 projectLights.push([projectLight("/flashreel.webm", 0, 0, 0), 100])
-
-projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0, 0), 500])
-
-projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0, 0), 500])
-
+projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0, 0), 200])
+projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0, 0), 200])
 projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0, -20.3), 500])
-
-projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0, 20.3), 500])
+projectLights.push([projectLight("/elumin_screen_blurred_2.png", 20, 0, 20.3), 200])
 
 // Project lights
 function projectLight(texture_path, x_pos, z_pos, x_target) {
@@ -192,53 +183,50 @@ function projectLight(texture_path, x_pos, z_pos, x_target) {
   return projectLight
 }
 
-// function ambienceLight(color, dist, intensity, x, y, z){
-//   const light = new THREE.PointLight(color, 0, dist);
-//   scene.add(light);
-//   light.position.set(x, y, z);
-//   ambienceLights.push([light, intensity])
-// }
-
-// const ambienceLight1 = new THREE.PointLight(0xff0000, 10, 20);
-// scene.add(ambienceLight1);
-// ambienceLight1.position.set(-21, -0.2, -172);
-
-// ambienceLight(0xffffff, 10, 7, 0, 2, -172)
-
-// const ambienceLight2 = new THREE.PointLight(0xffffff, 10, 7);
-// scene.add(ambienceLight2);
-// ambienceLight2.position.set(0, 2, -172);
-// const ambienceLight3 = new THREE.PointLight(0x00ddbb, 10, 10);
-// scene.add(ambienceLight3);
-// ambienceLight3.position.set(21, -0.2, -172);
-
 const raycaster = new THREE.Raycaster();
 
-const fireliveScreenMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/firelive_screen_emi.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
-fireliveScreen.material = fireliveScreenMaterial;
+const backContainer = document.getElementById('backContainer')
 
-document.getElementById("bg").addEventListener("mousemove", (event) => {
+// Connect Event listeners
+window.addEventListener('resize', updateSreenSize);
+document.getElementById("bg").addEventListener("mousemove", onMouseMove)
+document.getElementById("bg").addEventListener("click", backgroundClick);
+document.getElementById("toggleSoundButton").addEventListener("click", soundButtonClick);
+document.getElementById("devInfoButton").addEventListener("click", devButtonClick);
+backContainer.addEventListener('click', closeProject)
+document.body.onscroll = updateScrollValue
+
+function onMouseMove(event){
   const coords = new THREE.Vector2(event.clientX / renderer.domElement.clientWidth * 2 - 1, -(event.clientY / renderer.domElement.clientHeight * 2 - 1));
   raycaster.setFromCamera(coords, camera);
   const intersections = raycaster.intersectObjects(scene.children, true);
   if (intersections.length > 0){
     updateHover3D(intersections[0].object.name);
+  }else{
+    updateHover3D("")
   }
- })
+ }
 
 function updateHover3D(targetName){
-  if (targetName === "Firelive"){
-    fireliveScreen.material.emissiveIntensity = 1.0;
-    document.body.style.cursor = "pointer";
-  } else{
-    fireliveScreen.material.emissiveIntensity = 0.0
-    document.body.style.cursor = "default";
+  let hoveringSomething = false;
+  for (let i = 0; i < projects.length; i++){
+    const screen = loadingMesh.getObjectByName(projects[i]);
+    screen.material.emissiveIntensity = 0.0;
 
+    if (targetName === projects[i]){
+      screen.material.emissiveIntensity = 1.0;
+      document.body.style.cursor = "pointer";
+      hoveringSomething = true
+    }
+  }
+  
+  if (!hoveringSomething){
+    document.body.style.cursor = "default";
   }
 }
 
 // Dev only
-let skipIntro = false;
+let skipIntro = true;
 if (skipIntro){
   camera.position.set(0, 0, -167);
   camera.fov = 50.0;
@@ -251,10 +239,6 @@ if (skipIntro){
   for(var i=0; i<projectLights.length; i++){
     projectLights[i][0].intensity = projectLights[i][1];
   }
-
-  // for(var i=0; i<ambienceLights.length; i++){
-  //   ambienceLights[i][0].intensity = ambienceLights[i][1];
-  // }
 
   var elements = document.querySelectorAll('.project-ui');
   for(var i=0; i<elements.length; i++){
@@ -282,6 +266,8 @@ function animate() {
   composer.render();
 }
 
+animate()
+
 function updateScroll(){
   if (introDone){
     camera.position.set((scrollPercent-50), camera.position.y, camera.position.z);
@@ -297,7 +283,145 @@ function play_clip(gltfLoad, mixer, clipName, oneShot) {
   return animation
 }
 
-let introTriggered
+function updateSreenSize(){
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight)
+  flatRenderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+}
+
+function backgroundClick(){
+  const intersections = raycaster.intersectObjects(scene.children, true);
+  raycastClick(intersections[0].object.name)
+  
+  //Dev Only
+  if (skipIntro){
+    for(var i=0; i<videosPlayers.length; i++){
+      videosPlayers[i].play()
+    }
+    return;
+  }
+
+  // Intro Play
+  screenTouched = true
+  enterTextLabel.visible = false
+  ambientSound.play();
+}
+
+function raycastClick(raycastedObject){
+  for (let i = 0; i < projects.length; i++){
+    if (raycastedObject === projects[i]){
+      openProject(projects[i]);
+    }
+  }
+}
+
+
+function openProject(projectName){
+  closeProject(projectShown);
+  
+  projectTranstion(projectName, 100.0);
+
+  document.querySelector('body').style.overflow = "hidden";
+  document.getElementById('bg').style.pointerEvents= "none";
+
+  const projectTexts = document.getElementsByClassName("project-text-container");
+  for(var i=0; i<projectTexts.length; i++){
+    projectTexts[i].scrollTo(0, 0);
+  }
+
+  projectShown = projectName;
+  updateHover3D("");
+}
+
+function closeProject(){
+  if (projectShown !== ""){
+
+    projectTranstion(projectShown, 0.0);
+
+    document.querySelector('body').style.overflow = "auto";
+    document.getElementById('bg').style.pointerEvents= "all";
+    projectShown = "";
+
+  }
+}
+
+// Manage projects tranistions animations
+let tweenProject
+function projectTranstion(projectName, val){
+
+  const projectContainer = document.getElementById(projectName);
+
+  if (tweenProject && tweenProject.isActive()){
+    tweenProject.onComplete = () => {
+      projectTranstion(val)
+    };
+  }
+
+  let opacityObj = { value: val === 100.0 ? 0.0 : 100.0 };
+  console.log(opacityObj.value)
+  tweenProject = gsap.to(opacityObj, {
+      value: val,
+      duration: 0.3,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        projectContainer.style.opacity = opacityObj.value.toString() + "%";
+        backContainer.style.opacity = opacityObj.value.toString() + "%";
+      },
+      onComplete: () => {
+        updateProjectVisiblity(projectName, val)
+      }
+    });
+  if (val === 100.0){
+    updateProjectVisiblity(projectName, 100.0);
+  }
+}
+
+// 100.0 = visible, 0.0 = hidden
+function updateProjectVisiblity(projectName, value){
+
+  const projectContainer = document.getElementById(projectName);
+
+  const visiblity = value === 0.0 ? "hidden" : "visible"
+  console.log(visiblity)
+  backContainer.style.opacity = value.toString() + "%"
+  projectContainer.style.opacity = value.toString() + "%"
+  backContainer.style.visibility = visiblity;
+  projectContainer.style.visibility = visiblity;
+}
+
+function soundButtonClick(){
+  if (volumeMuted){
+    ambientSound.setVolume(2.0)
+    introSound.setVolume(1.0);
+    loadingSound.setVolume(2.0);
+    document.getElementById("not-muted-icon").style.visibility = "visible";
+    document.getElementById("muted-icon").style.visibility = "hidden";
+  }else{
+    ambientSound.setVolume(0.0);
+    introSound.setVolume(0.0);
+    loadingSound.setVolume(0.0);
+    document.getElementById("not-muted-icon").style.visibility = "hidden";
+    document.getElementById("muted-icon").style.visibility = "visible";
+  }
+  volumeMuted = !volumeMuted;
+}
+
+function devButtonClick(){
+  if (projectShown === "DevInfos"){
+    closeProject();
+  }else{
+    openProject("DevInfos");
+  }
+}
+
+function updateScrollValue(){
+  scrollPercent = ((document.documentElement.scrollTop || document.body.scrollTop) / ((document.documentElement.scrollHeight || document.body.scrollHeight) - document.documentElement.clientHeight)) * 100;
+}
+
+let introTriggered = false
 function triggerEnter(){
   if (loading_anim.time < 0.1 && screenTouched && !introTriggered){
     screenTouched = false
@@ -347,19 +471,6 @@ function enter(){
                     ambientSound.setVolume(soundObj.value);
                   }
                 });
-
-                // let ambienceObj = { value: 0 };
-                // gsap.to(ambienceObj, {
-                //   value: 1.0,
-                //   delay:3.0,
-                //   duration: 5.0,
-                //   ease: "expo.in",
-                //   onUpdate: () => {
-                //     for(var i=0; i<ambienceLights.length; i++){
-                //       ambienceLights[i][0].intensity = ambienceLights[i][1] * ambienceObj.value;
-                //     }
-                //   }
-                // });
 
                 let projectorsObj = { value: 0 };
                 gsap.to(projectorsObj, {
@@ -419,129 +530,3 @@ function enter(){
       }
     });
 }
-
-window.addEventListener('resize', function(){
-  updateSreenSize();
-})
-
-function updateSreenSize(){
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight)
-  flatRenderer.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-}
-
-const backContainer = document.getElementById('backContainer')
-
-backContainer.addEventListener('click', () =>{
-  closeProject()
-})
-
-document.getElementById("bg").addEventListener("click", () => {
-  const intersections = raycaster.intersectObjects(scene.children, true);
-  if (intersections[0].object.name === "Firelive"){
-    showProject("Firelive")
-  }
-
-  if (skipIntro){
-    for(var i=0; i<videosPlayers.length; i++){
-      videosPlayers[i].play()
-    }
-    return;
-  }
-
-  screenTouched = true
-  enterTextLabel.visible = false
-  ambientSound.play();
-});
-
-function showProject(projectName){
-  closeProject(projectShown);
-
-  const projectContainer = document.getElementById(projectName);
-  const backContainer = document.getElementById("backContainer");
-  
-  let opacityObj = { value: 0.0 };
-  gsap.to(opacityObj, {
-    value: 1.0,
-    duration: 0.5,
-    ease: "power2.inOut",
-    onUpdate: () => {
-      projectContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
-      backContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
-    }
-  });
-
-  document.querySelector('body').style.overflow = "hidden";
-  document.getElementById('bg').style.pointerEvents= "none";
-  backContainer.style.visibility = "visible";
-  projectContainer.style.visibility = "visible";
-
-  const projectTexts = document.getElementsByClassName("project-text-container");
-  for(var i=0; i<projectTexts.length; i++){
-    projectTexts[i].scrollTo(0, 0);
-  }
-
-  projectShown = projectName;
-  updateHover3D("");
-}
-
-function closeProject(){
-  if (projectShown !== ""){
-
-    const projectContainer = document.getElementById(projectShown);
-    const backContainer = document.getElementById("backContainer");
-
-    let opacityObj = { value: 1.0 };
-    gsap.to(opacityObj, {
-      value: 0.0,
-      duration: 0.5,
-      ease: "power2.inOut",
-      onUpdate: () => {
-        projectContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
-        backContainer.style.opacity = (opacityObj.value * 100.0).toString() + "%";
-      },
-      onComplete: () => {
-        backContainer.style.visibility = "hidden";
-        projectContainer.style.visibility = "hidden";
-      }
-    });
-    document.querySelector('body').style.overflow = "auto";
-    document.getElementById('bg').style.pointerEvents= "all";
-    projectShown = "";
-
-  }
-}
-
-document.getElementById("toggleSoundButton").addEventListener("click", () => {
-  if (volumeMuted){
-    ambientSound.setVolume(2.0)
-    introSound.setVolume(1.0);
-    loadingSound.setVolume(2.0);
-    document.getElementById("not-muted-icon").style.visibility = "visible";
-    document.getElementById("muted-icon").style.visibility = "hidden";
-  }else{
-    ambientSound.setVolume(0.0);
-    introSound.setVolume(0.0);
-    loadingSound.setVolume(0.0);
-    document.getElementById("not-muted-icon").style.visibility = "hidden";
-    document.getElementById("muted-icon").style.visibility = "visible";
-  }
-  volumeMuted = !volumeMuted;
-});
-
-document.getElementById("devInfoButton").addEventListener("click", () => {
-  if (projectShown === "DevInfos"){
-    closeProject();
-  }else{
-    showProject("DevInfos");
-  }
-});
-
-document.body.onscroll = () => {
-    scrollPercent = ((document.documentElement.scrollTop || document.body.scrollTop) / ((document.documentElement.scrollHeight || document.body.scrollHeight) - document.documentElement.clientHeight)) * 100;
-}
-
-animate()
