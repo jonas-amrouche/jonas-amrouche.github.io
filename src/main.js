@@ -10,8 +10,11 @@ import { FXAAPass } from 'three/addons/postprocessing/FXAAPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { gsap } from 'gsap/gsap-core';
+import { lerp, randFloat, randInt } from 'three/src/math/MathUtils.js';
 
 // const pageSize = 5000;
+
+let targetStartLinksRotation = new THREE.Vector3();
 
 let introDone = false;
 let screenTouched = false;
@@ -40,8 +43,11 @@ flatRenderer.domElement.id = "flat-renderer"
 
 // Create scene and camera
 const scene = new THREE.Scene();
+const cameraSocket = new THREE.Object3D();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 8)
+scene.add(cameraSocket)
+cameraSocket.add(camera)
+cameraSocket.position.set(0, 0, 8)
 
 // Create distorsion black hole
   const distortionShader = {
@@ -173,8 +179,10 @@ const mask = loadingMesh.getObjectByName("Mask");
 const Windows = loadingMesh.getObjectByName("Windows");
 const lighthouse = loadingMesh.getObjectByName("LightHouse")
 const props = loadingMesh.getObjectByName("Props")
-const starLinks = loadingMesh.getObjectByName("Links")
-starLinks.material.emissiveIntensity = 0.0;
+const projectStar = loadingMesh.getObjectByName("ProjectStar")
+projectStar.material.emissiveIntensity = 0.0;
+// const starLinks = loadingMesh.getObjectByName("Links")
+// starLinks.material.emissiveIntensity = 0.0;
 lighthouse.visible = false;
 props.visible = false;
 Windows.visible = false;
@@ -214,21 +222,21 @@ torus.position.set(0, 0, -2)
 scene.add(torus);
 
 // Create animated wireframe tunel
-const pageGridGeometry = new THREE.CylinderGeometry( 5, 5, 60, 50, 100, true);
-const pageGridVertexShader = document.getElementById('tunnelVertexShader').textContent;
-const pageGridFragmentShader = document.getElementById('tunnelFragmentShader').textContent;
-const pageGridMaterial = new THREE.ShaderMaterial( {
-  vertexShader:pageGridVertexShader,
-  fragmentShader:pageGridFragmentShader,
+const tunnelGeometry = new THREE.CylinderGeometry( 5, 5, 60, 50, 100, true);
+const tunnelVertexShader = document.getElementById('tunnelVertexShader').textContent;
+const tunnelFragmentShader = document.getElementById('tunnelFragmentShader').textContent;
+const tunnelMaterial = new THREE.ShaderMaterial( {
+  vertexShader:tunnelVertexShader,
+  fragmentShader:tunnelFragmentShader,
   wireframe:true,
   uniforms : {
     uTime:0.0,
     uOpacity:0.0
   }});
-const pageGrid = new THREE.Mesh(pageGridGeometry, pageGridMaterial);
-pageGrid.position.set(0, 0, -130.0)
-pageGrid.rotation.set(Math.PI/2.0, 0, 0)
-scene.add(pageGrid);
+const tunnelMesh = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+tunnelMesh.position.set(0, 0, -130.0)
+tunnelMesh.rotation.set(Math.PI/2.0, 0, 0)
+scene.add(tunnelMesh);
 
 // Setup sounds
 const audioLoader = new THREE.AudioLoader();
@@ -308,7 +316,8 @@ function projectLight(texture_path, x_pos, z_pos, x_target) {
 
 const raycaster = new THREE.Raycaster();
 
-const backContainer = document.getElementById('backContainer')
+const tab2DBackContainer = document.getElementById('tab2DBackContainer')
+const projectBackContainer = document.getElementById('projectBackContainer')
 const scrollBox = document.getElementById("scroll-box")
 
 // Connect Event listeners
@@ -316,13 +325,14 @@ window.addEventListener('resize', updateSreenSize);
 document.getElementById("toggleSoundButton").addEventListener("click", soundButtonClick);
 document.getElementById("behindTheScenesButton").addEventListener("click", devButtonClick);
 document.getElementById("bioButton").addEventListener("click", bioButtonClick);
-backContainer.addEventListener('click', close2DTabs)
+tab2DBackContainer.addEventListener('click', close2DTabs)
 scrollBox.addEventListener("mousemove", onMouseMove)
 scrollBox.addEventListener("click", backgroundClick);
 scrollBox.onscroll = updateScrollValue
 
 function onMouseMove(event){
   const coords = new THREE.Vector2(event.clientX / renderer.domElement.clientWidth * 2 - 1, -(event.clientY / renderer.domElement.clientHeight * 2 - 1));
+  targetStartLinksRotation = new THREE.Vector3(-coords.y*0.1, coords.x*0.1, 0.0)
   raycaster.setFromCamera(coords, camera);
   const intersections = raycaster.intersectObjects(scene.children, true);
   if (intersections.length > 0){
@@ -332,7 +342,7 @@ function onMouseMove(event){
   }else{
     updateHover3D("")
   }
- }
+}
 
 function updateHover3D(targetName){
   let hoveringSomething = false;
@@ -355,13 +365,14 @@ function updateHover3D(targetName){
 // Dev only
 let skipIntro = false;
 if (skipIntro){
-  camera.position.set(0, 0, -167);
+  cameraSocket.position.set(0, 0, -167);
   camera.fov = 50.0;
   camera.updateProjectionMatrix();
   play_clip(animLoaded, mixer, "floating", false);
   torus.visible = false;
   mask.visible = false;
   Windows.visible = true;
+  tunnelMesh.visible = false;
   lighthouse.visible = true;
   props.visible = true;
 
@@ -374,7 +385,7 @@ if (skipIntro){
     elements[i].style.opacity = "100%";
   }
 
-  pageGrid.material.uniforms.uOpacity = {value : 1.0}
+  tunnelMesh.material.uniforms.uOpacity = {value : 1.0}
   introDone = true;
   scrollBox.style.overflow = "scroll";
   scrollTarget = 50.0
@@ -388,13 +399,15 @@ function animate() {
 
   // Updates animations times
   mixer.update(clock.getDelta());
-  pageGrid.material.uniforms.uTime = {value : clock.elapsedTime};
+  tunnelMesh.material.uniforms.uTime = {value : clock.elapsedTime};
 
   updateScroll();
 
   triggerEnter();
 
   updateCamScrollSpeed();
+
+  updateProjectRotation();
   
   // Render scene
   flatRenderer.render(scene, camera);
@@ -408,14 +421,22 @@ function updateCamScrollSpeed(){
   const speedDifference = scrollPercent - previousScrollPercent
   scrollSpeed = THREE.MathUtils.lerp(scrollSpeed, speedDifference, 0.1)
 
-  camera.rotation.set(0, -scrollSpeed*0.1, scrollSpeed*0.1)
+  cameraSocket.rotation.set(0, -scrollSpeed*0.1, scrollSpeed*0.1)
   previousScrollPercent = scrollPercent
+}
+
+function updateProjectRotation(){
+  if (projectStar !== null){
+    const rot1 = projectStar.rotation
+    const rot2 = targetStartLinksRotation
+    projectStar.rotation.set(THREE.MathUtils.lerp(rot1.x, rot2.x, 0.1), THREE.MathUtils.lerp(rot1.y, rot2.y, 0.1), 0.0)
+  }
 }
 
 function updateScroll(){
   if (introDone && !scrollDisabled){
     scrollTarget = THREE.MathUtils.lerp(scrollTarget, scrollPercent, 0.1)
-    camera.position.set((scrollTarget-50)*0.8, camera.position.y, camera.position.z);
+    cameraSocket.position.set((scrollTarget-50)*0.8, cameraSocket.position.y, cameraSocket.position.z);
   }
 }
 
@@ -436,11 +457,20 @@ function updateSreenSize(){
   flatRenderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  camera.position.set(0, 0, window.innerHeight / window.innerWidth * 8.0 - 4.0)
 }
 
 function backgroundClick(){
   const intersections = raycaster.intersectObjects(scene.children, true);
-  raycastClick(intersections[0].object.name)
+
+  if (projectShown !== ""){
+    toggleProject("")
+    return
+  }
+
+  if (intersections.length > 0){
+    raycastClick(intersections[0].object.name)
+  }
   
   //Dev Only
   if (skipIntro){
@@ -465,22 +495,28 @@ function raycastClick(raycastedObject){
 }
 
 function toggleProject(projectName){
-  if (projectShown === ""){
-    scrollDisabled = true
-    projectTransition(projectName, 1.0)
-    projectShown = projectName
-  }else{
-    projectTransition(projectShown, 0.0)
-    projectShown = ""
+  if (!inProjectTransition){
+    if (projectShown === ""){
+      scrollDisabled = true
+      projectTransition(projectName, 1.0)
+      projectShown = projectName
+    }else{
+      projectTransition(projectShown, 0.0)
+      projectShown = ""
+    }
   }
 }
 
 // Manage projects tranistions animations
-let tweenProject
-function projectTransition(projectName, val){
+let inProjectTransition = false
+function projectTransition(tabName, val){
+  inProjectTransition = true
+  console.log(tabName)
+  
+  const projectContainer = document.getElementById(tabName);
 
   let obj = { value: val === 1.0 ? 0.0 : 1.0 };
-  tweenProject = gsap.to(obj, {
+  gsap.to(obj, {
     delay: val === 1.0 ? 0.0 : 1.0,
     value: val,
     duration: 1.0,
@@ -491,32 +527,46 @@ function projectTransition(projectName, val){
     },
     onComplete: () => {
       if (val === 1.0){
-        camera.position.set(0, 60, -130)
+        cameraSocket.position.set(0, 60, -130)
+        projectContainer.style.visibility = "visible"
+      }else{
+        inProjectTransition = false
+        projectContainer.style.visibility = "hidden"
       }
       distortionMaterial.uniforms.sphereRadius.value = 0.0;
       distortionMaterial.uniforms.gravityStrength.value = 0.0;
     }
   });
+
   gsap.to(distortionMaterial.uniforms.eventHorizonRadius, {
     value: val * 3.5,
     delay: val === 1.0 ? 0.3 : 1.0,
     duration: 0.7,
     ease: "power2.inOut",
   });
-  gsap.to(starLinks.material, {
-    emissiveIntensity: val * 1.0,
+
+  let starObj = { value: val === 1.0 ? 0.0 : 1.0 };
+  gsap.to(starObj, {
+    value: val,
     delay: val === 1.0 ? 1.0 : 0.0,
     duration: 0.7,
     ease: "power2.inOut",
+    onUpdate: () => {
+      projectStar.material.emissiveIntensity = starObj.value;
+      projectContainer.style.opacity = (starObj.value * 100.0).toString() + "%";
+    },
     onComplete: () => {
       if (val === 0.0){
         distortionMaterial.uniforms.sphereRadius.value = 7.5;
         distortionMaterial.uniforms.gravityStrength.value = 5.0;
-        camera.position.set((scrollTarget-50)*0.8, 0, -167)
+        cameraSocket.position.set((scrollTarget-50)*0.8, 0, -167)
         scrollDisabled = false
+      }else{
+        inProjectTransition = false
       }
     }
   });
+
 }
 
 function open2DTabs(tabName){
@@ -560,8 +610,8 @@ function transition2Dtabs(tabName, val){
     duration: 0.3,
     ease: "power2.inOut",
     onUpdate: () => {
-      tab2DContainer.style.opacity = opacityObj.value.toString() + "%";
-      backContainer.style.opacity = opacityObj.value.toString() + "%";
+      tab2DContainer.style.opacity =(opacityObj.value * 0.9).toString() + "%";
+      tab2DBackContainer.style.opacity = (opacityObj.value * 0.9).toString() + "%";
     },
     onComplete: () => {
       update2DTabsVisiblity(tabName, val === 0.0 ? "hidden" : "visible", val)
@@ -576,9 +626,9 @@ function update2DTabsVisiblity(tabName, visibility, value){
 
   const tab2DContainer = document.getElementById(tabName);
 
-  backContainer.style.opacity = value.toString() + "%"
-  tab2DContainer.style.opacity = value.toString() + "%"
-  backContainer.style.visibility = visibility;
+  tab2DBackContainer.style.opacity = (value * 0.9).toString() + "%"
+  tab2DContainer.style.opacity = (value * 0.9).toString() + "%"
+  tab2DBackContainer.style.visibility = visibility;
   tab2DContainer.style.visibility = visibility;
 }
 
@@ -651,7 +701,7 @@ function enter(){
             torus.visible = false;
             mask.visible = false;
             Windows.visible = true;
-            pageGrid.material.uniforms.uOpacity = {value : 0.0}
+            tunnelMesh.material.uniforms.uOpacity = {value : 0.0}
             play_clip(animLoaded, mixer, "intro", true)
             gsap.to(camera, {
               fov: 100,
@@ -687,7 +737,7 @@ function enter(){
                   }
                 });
                     
-                gsap.to(pageGrid.material.uniforms.uOpacity, {
+                gsap.to(tunnelMesh.material.uniforms.uOpacity, {
                   delay: 2.5,
                   value: 1.0,
                   duration: 2.0,
@@ -702,7 +752,7 @@ function enter(){
                     camera.updateProjectionMatrix();
                   },
                 });
-                gsap.to(camera.position, {
+                gsap.to(cameraSocket.position, {
                   x: 0,
                   y: 0,
                   z: -167,
@@ -714,7 +764,7 @@ function enter(){
 
                   }
                 });
-                gsap.to(camera.rotation, {
+                gsap.to(cameraSocket.rotation, {
                   x: 0,
                   y: 0,
                   z: Math.PI*2.0,
@@ -727,6 +777,7 @@ function enter(){
                     introDone = true;
                     play_clip(animLoaded, mixer, "floating", false)
                     scrollBox.style.overflow = "scroll";
+                    tunnelMesh.visible = false;
                     scrollTarget = 50.0
                     scrollPercent = 50.0
                     previousScrollPercent = 50.0

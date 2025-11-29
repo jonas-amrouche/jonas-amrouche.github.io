@@ -13,7 +13,7 @@
   <body>
     <h1 id="loading-text">LOADING...</h1>
     <canvas id="bg"></canvas>
-    
+
     <div id="scroll-box">
       <div class="scroll-item"></div>
       <div class="scroll-item"></div>
@@ -22,8 +22,25 @@
       <div class="scroll-item"></div>
     </div>
 
-    <a id="backContainer"></a>
     <div class="project-container" id="Firelive">
+      <h1 class="project-title">FireLive</h1>
+      <img class="project-video" src="src/firelive_screenshot2.jpg"> <!-- Demo Video -->
+      <p class="project-text">
+        Firelive is a software for <u><strong>live mixing</strong> and <strong>live producing</strong></u> with <strong>integrated loop buffers</strong>, <strong>entirely customizable</strong> and <strong>usable with any custom controllers</strong>.
+      </p>
+      <div style="margin-top: 5%; display: grid; grid-template-columns: auto auto auto;">
+        <img style="width: 90%; left: 10%;" class="project-screenshot" src="src/firestage_screenshot1.jpg">
+        <img style="width: 90%; left: 10%;" class="project-screenshot" src="src/firestage_screenshot2.jpg">
+        <img style="width: 90%; left: 10%;" class="project-screenshot" src="src/firestage_screenshot2.jpg">
+      </div>
+      <div class="project-tech-container" style="grid-template-columns: 33.3% 33.3% 33.3%;">
+          <img class="project-tech-logo" alt="Socket.io" src="src\img\socketio_logo.svg"></img>
+          <img class="project-tech-logo" alt="Inkscape" src="src\img\inkscape_logo.svg"></img>
+          <img class="project-tech-logo" alt="Git" src="src\img\git_logo.svg"></img>
+      </div>
+    </div>
+
+    <!-- <div class="project-container" id="Firelive">
       <h1 class="project-title">FireLive</h1>
       <div class="project-text-container" >
         <p class="project-text">The idea for this project was to make a software for <u><strong>live mixing</strong> and <strong>live producing</strong></u> with <strong>integrated loop buffers</strong>, <strong>entirely customizable</strong> and <strong>usable with any custom controllers</strong>.
@@ -36,7 +53,7 @@
           After the first week I refactored all my code, fix some bugs, polished some features, and start working on a <u><strong>C++ gdextension for all the computing intensive task</strong></u>, like generating the audio spectrum or adding additional audio effect.
         </p>
           <br>
-           <img class="project-screenshot" src="src/firelive_screenshot2.jpg"> <!-- Demo Video -->
+           <img class="project-screenshot" src="src/firelive_screenshot2.jpg">
           <p class="project-italic-infos">Firelive Demo.</p>
           <br><br>
         <p class="project-text">
@@ -56,7 +73,7 @@
           I love live shows, lightning and audio techniques that hyped up a crowd, and I hope I can one day work on something like that.
         </p>
       </div>
-    </div>
+    </div> -->
 
     <div class="project-container" id="ServerMeshing">
       <h1 class="project-title">Server Meshing technology</h1>
@@ -156,10 +173,12 @@
       </div>
     </div>
 
+    <a id="tab2DBackContainer"></a>
+
     <div class="tab-2D-container" id="Bio">
-      <h1 class="project-title">About Me</h1>
-      <div class="project-text-container" >
-        <p class="project-text">
+      <h1 class="tab-2D-title">About Me</h1>
+      <div class="tab-2D-text-container" >
+        <p class="tab-2D-text">
           I'm a <strong>french 21 years old selftaught creative developer</strong> who love to build things.
           <br><br>
           I have completed 1 year of IT study before realizing that the rigid academic way of learning was not the right thing for me.
@@ -174,39 +193,27 @@
     </div>
     
     <div class="tab-2D-container" id="BehindTheScenes">
-      <h1 class="project-title">Behind the scenes</h1>
-      <div class="project-text-container" >
-        <p class="project-text">
+      <h1 class="tab-2D-title">Behind the scenes</h1>
+      <div class="tab-2D-text-container" >
+        <p class="tab-2D-text">
           This portfolio was put together in 2 weeks, <strong>I made all the assets from scratch</strong>, except the fonts used.
           <br><br>
           It's powered by <strong>three.js</strong>, github-pages with <strong>CI/CD</strong>, <strong>node.js</strong>, <strong>vite</strong> and the rest is in <strong>vanilla javascript</strong>.
           <br><br>
           Here are some screenshots of this portfolio R&D / Development :
         </p>
-
         <br><br>
-        
         <div style="display: grid; grid-template-columns: auto auto auto;">
           <img style="width: 90%; left: 5%;" class="project-screenshot" src="src/bts_1.jpg">
           <img style="width: 90%; left: 5%;" class="project-screenshot" src="src/bts_2.jpg">
           <img style="width: 90%; left: 5%;" class="project-screenshot" src="src/bts_3.jpg">
-          <p class="project-italic-infos">Experiment with a synthwave 80s style.</p>
-          <p class="project-italic-infos">Early attempt of a more colorfull approach, it was kind of cool but a bit too alien and more difficult to spatially separate each project scenes.</p>
-          <p class="project-italic-infos" >On the way to final result.</p>
+          <p class="tab-2D-italic-infos">Experiment with a synthwave 80s style.</p>
+          <p class="tab-2D-italic-infos">Early attempt of a more colorfull approach.</p>
+          <p class="tab-2D-italic-infos" >On the way to final result.</p>
         </div>
-        <!-- <div class="project-screenshot-container">
-          <img class="project-screenshot" src="src/bts_1.jpg">
-          <p class="project-italic-infos">Experiment with a synthwave 80s style.</p>
-          <br><br>
-          <img class="project-screenshot" src="src/bts_2.jpg">
-          <p class="project-italic-infos">Early attempt of a more colorfull approach, it was kind of cool but a bit too alien and more difficult to spatially separate each project scenes.</p>
-          <br><br>
-          <img class="project-screenshot" src="src/bts_3.jpg">
-          <p class="project-italic-infos" >On the way to final result.</p>
-        </div> -->
         <br><br>
         
-        <p class="project-text">
+        <p class="tab-2D-text">
           Also if you are curious, you can <a href="https://jonas-amrouche.github.io/games/">check out</a> my previous portfolio, it was less technical and more centered around games.
         </p>
           
