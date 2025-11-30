@@ -207,7 +207,7 @@ const loading_anim = play_clip(animLoaded, mixer, "loading", false);
 
 // Enter Text Label
 const enterTextP = document.createElement("p");
-enterTextP.textContent = "click to enter my portfolio";
+enterTextP.textContent = "CLICK TO ENTER";
 enterTextP.id = "enter-text";
 const enterTextLabel = new CSS2DObject(enterTextP);
 scene.add(enterTextLabel);
