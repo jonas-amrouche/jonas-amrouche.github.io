@@ -177,13 +177,11 @@ const mixer = new THREE.AnimationMixer( loadingMesh );
 scene.add( loadingMesh );
 const mask = loadingMesh.getObjectByName("Mask");
 const Windows = loadingMesh.getObjectByName("Windows");
-// const lighthouse = loadingMesh.getObjectByName("LightHouse")
 const props = loadingMesh.getObjectByName("Props")
 const projectStar = loadingMesh.getObjectByName("ProjectStar")
 projectStar.material.emissiveIntensity = 0.0;
 // const starLinks = loadingMesh.getObjectByName("Links")
 // starLinks.material.emissiveIntensity = 0.0;
-// lighthouse.visible = false;
 props.visible = false;
 Windows.visible = false;
 Windows.frustumCulled = false;
@@ -199,7 +197,7 @@ const eluminScreen = loadingMesh.getObjectByName("Elumin");
 const eluminScreenMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/elumin_screenshot2.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
 eluminScreen.material = eluminScreenMaterial
 const serverMeshingScreen = loadingMesh.getObjectByName("ServerMeshing");
-const serverMeshingMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/server_meshing_screenshot_2.png"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
+const serverMeshingMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/server_meshing_screenshot_1.png"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
 serverMeshingScreen.material = serverMeshingMaterial;
 const metronimScreen = loadingMesh.getObjectByName("Metronim");
 const metronimMaterial = new THREE.MeshStandardMaterial( { map: textureLoader.load("/metronim_screenshot1.jpg"), emissive:0xffffff, emissiveMap: textureLoader.load("/hologram_hover.jpg"), emissiveIntensity:0.0, alphaMap: textureLoader.load("/hologram_alpha.jpg"), transparent:true, alphaTest:true } );
@@ -292,8 +290,8 @@ projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, 0), 200])
 projectLights.push([projectLight("/elumin_screen_blurred_1.png", 20, 0), 200])
 projectLights.push([projectLight("/firelive_screen1_blured.jpg", -20, -20.3), 500])
 projectLights.push([projectLight("/elumin_screen_blurred_2.png", 20, 20.3), 200])
-projectLights.push([projectLight("/metronim_screenshot4.jpg", 40, 40.3), 200])
-projectLights.push([projectLight("/server_meshing_screenshot_1.png", -40, -40.3), 200])
+projectLights.push([projectLight("/metronim_screenshot4_blurred.jpg", 40, 40.3), 200])
+projectLights.push([projectLight("/server_meshing_screenshot_2_blurred.png", -40, -40.3), 200])
 
 // Project lights
 function projectLight(texture_path, x_pos, x_target) {
@@ -351,8 +349,6 @@ function onMouseMove(event){
   raycaster.setFromCamera(coords, camera);
   const intersections = raycaster.intersectObjects(scene.children, true);
   if (intersections.length > 0){
-    // const aspect = renderer.domElement.clientWidth / renderer.domElement.clientHeight
-    // distortionMaterial.uniforms.sphereCenter.value = new THREE.Vector3(coords.x * aspect, coords.y, 2.0)
     updateHover3D(intersections[0].object.name);
   }else{
     updateHover3D("")
@@ -388,7 +384,6 @@ if (skipIntro){
   mask.visible = false;
   Windows.visible = true;
   tunnelMesh.visible = false;
-  // lighthouse.visible = true;
   props.visible = true;
   ambientSound.setVolume(2.0)
   ambientSound.play();
@@ -791,7 +786,6 @@ function enter(){
                   duration: 5,
                   ease: "power2.inOut",
                   onComplete: () => {
-                    // lighthouse.visible = true;
                     props.visible = true;
 
                   }

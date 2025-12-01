@@ -276,4 +276,11 @@ a {
     opacity: 0%;
     overflow: visible;
   }
+
+  .scroll-item {
+  position: relative;
+  width: 500px;
+  height: 100%;
+  pointer-events: none;
+}
 }
