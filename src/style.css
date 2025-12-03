@@ -21,9 +21,16 @@ a {
   position: fixed;
 	overflow: hidden;
   width: 100%;
-  height: 2500px;
+  height: 100%;
   pointer-events:auto;
   scrollbar-width: none;
+}
+
+.scroll-item {
+  position: relative;
+  height: 500px;
+  width: 100%;
+  pointer-events: none;
 }
 
 .widget-steam{
@@ -65,7 +72,7 @@ a {
   bottom: 20%;
   text-align: center;
   color: rgb(255, 255, 255);
-  font-size: 300%;
+  font-size: 200%;
 }
 
 #toggleSoundButton{
@@ -86,8 +93,8 @@ a {
 #backButton{
   position: fixed;
   bottom: 15px;
-  right: 43%;
-  width: 14%;
+  right: 40%;
+  width: 20%;
   visibility: hidden;
 }
 
@@ -202,7 +209,7 @@ a {
   filter: drop-shadow(0 0 100px rgb(51, 63, 88));
   width: 75%;
   height: 80%;
-  top: 15%;
+  top: 10%;
   left: 12.5%;
   opacity: 0%;
   pointer-events: all;
@@ -271,7 +278,7 @@ a {
   
   .project-container{
     visibility: hidden;
-    position: absolute;
+    position: fixed;
     filter: drop-shadow(0 0 100px rgb(51, 63, 88));
     width: 80%;
     height: 80%;
@@ -281,14 +288,21 @@ a {
     overflow: visible;
   }
 
-  #scroll-box {
-    position: fixed;
+  /* #scroll-box {
+    position: absolute;
     overflow: hidden;
     height: 100%;
     width: 2500px;
     pointer-events:auto;
     scrollbar-width: none;
-  }
+  } */
+
+  .scroll-item {
+  position: relative;
+  width: 500px;
+  height: 100%;
+  pointer-events: none;
+}
   
   .project-text{
     font-size: 3vw;
