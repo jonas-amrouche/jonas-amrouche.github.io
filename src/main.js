@@ -340,6 +340,7 @@ const raycaster = new THREE.Raycaster();
 const tab2DBackContainer = document.getElementById('tab2DBackContainer')
 const projectContainers = document.getElementsByClassName('project-container')
 const scrollBox = document.getElementById("scroll-box")
+const backButton = document.getElementById("backButton")
 
 // Connect Event listeners
 window.addEventListener('resize', updateSreenSize);
@@ -351,6 +352,7 @@ for (let i = 0; i< projectContainers.length; i++){
 }
 tab2DBackContainer.addEventListener('click', close2DTabs)
 scrollBox.addEventListener("mousemove", onMouseMove)
+backButton.addEventListener("click", closeProject);
 scrollBox.addEventListener("click", backgroundClick);
 scrollBox.onscroll = updateScrollValue
 
@@ -497,13 +499,15 @@ function updateSreenSize(){
   // }
 }
 
-function backgroundClick(){
-  const intersections = raycaster.intersectObjects(scene.children, true);
-
+function closeProject(){
   if (projectShown !== ""){
     toggleProject("")
     return
   }
+}
+
+function backgroundClick(){
+  const intersections = raycaster.intersectObjects(scene.children, true);
 
   if (intersections.length > 0){
     raycastClick(intersections[0].object.name)
@@ -573,9 +577,11 @@ function projectTransition(tabName, val){
       if (val === 1.0){
         cameraSocket.position.set(0, 60, -130)
         projectContainer.style.visibility = "visible"
+        backButton.style.visibility = "visible"
       }else{
         inProjectTransition = false
         projectContainer.style.visibility = "hidden"
+        backButton.style.visibility = "hidden"
       }
       distortionMaterial.uniforms.sphereRadius.value = 0.0;
       distortionMaterial.uniforms.gravityStrength.value = 0.0;
@@ -598,6 +604,7 @@ function projectTransition(tabName, val){
     onUpdate: () => {
       projectStar.material.emissiveIntensity = starObj.value;
       projectContainer.style.opacity = (starObj.value * 100.0).toString() + "%";
+      backButton.style.opacity = (starObj.value * 100.0).toString() + "%";
     },
     onComplete: () => {
       if (val === 0.0){
