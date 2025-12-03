@@ -351,38 +351,60 @@ for (let i = 0; i< projectContainers.length; i++){
 }
 tab2DBackContainer.addEventListener('click', close2DTabs)
 scrollBox.addEventListener("mousemove", onMouseMove)
-// projectContainer.addEventListener("mousemove", onMouseMove)
 scrollBox.addEventListener("click", backgroundClick);
 scrollBox.onscroll = updateScrollValue
 
+let mouseCoords = new THREE.Vector2(0.0, 0.0)
 function onMouseMove(event){
-  const coords = new THREE.Vector2(event.clientX / renderer.domElement.clientWidth * 2 - 1, -(event.clientY / renderer.domElement.clientHeight * 2 - 1));
-  targetStartLinksRotation = new THREE.Vector3(-coords.y*0.1, coords.x*0.1, 0.0);
-  raycaster.setFromCamera(coords, camera);
-  const intersections = raycaster.intersectObjects(scene.children, true);
-  if (intersections.length > 0){
-    updateHover3D(intersections[0].object.name);
-  }else{
-    updateHover3D("");
-  }
+  mouseCoords = new THREE.Vector2(event.clientX / renderer.domElement.clientWidth * 2 - 1, -(event.clientY / renderer.domElement.clientHeight * 2 - 1));
+  targetStartLinksRotation = new THREE.Vector3(-mouseCoords.y*0.1, mouseCoords.x*0.1, 0.0);
+  updateHover3D()
 }
 
-function updateHover3D(targetName){
-  let hoveringSomething = false;
-  for (let i = 0; i < projects.length; i++){
-    const screen = loadingMesh.getObjectByName(projects[i]);
-    screen.material.emissiveIntensity = 0.2;
+function updateHover3D(){
+  raycaster.setFromCamera(mouseCoords, camera);
+  const intersections = raycaster.intersectObjects(scene.children, true);
 
-    if (targetName === projects[i] && !inProjectTransition){
-      screen.material.emissiveIntensity = 1.0;
-      document.body.style.cursor = "pointer";
-      hoveringSomething = true
+  let hoveringSomething = false;
+
+  if (intersections.length > 0){
+    for (let i = 0; i < projects.length; i++){
+      if (intersections[0].object.name === projects[i] && !inProjectTransition){
+        const screen = loadingMesh.getObjectByName(projects[i]);
+        screen.material.emissiveIntensity = 1.0;
+        document.body.style.cursor = "pointer";
+        hoveringSomething = true;
+      }
+    }
+  }else{
+    for (let i = 0; i < projects.length; i++){
+      const screen = loadingMesh.getObjectByName(projects[i]);
+      screen.material.emissiveIntensity = 0.2;
+      document.body.style.cursor = "default";
     }
   }
-  
+
   if (!hoveringSomething){
+    for (let i = 0; i < projects.length; i++){
+      const screen = loadingMesh.getObjectByName(projects[i]);
+      screen.material.emissiveIntensity = 0.2;
+    }
     document.body.style.cursor = "default";
   }
+
+  // let hoveringSomething = false;
+  // for (let i = 0; i < projects.length; i++){
+
+  //   if (targetName === projects[i] && !inProjectTransition){
+  //     screen.material.emissiveIntensity = 1.0;
+  //     document.body.style.cursor = "pointer";
+  //     hoveringSomething = true
+  //   }
+  // }
+  
+  // if (!hoveringSomething){
+  //   document.body.style.cursor = "default";
+  // }
 }
 
 // Dev only
@@ -475,7 +497,6 @@ function play_clip(gltfLoad, mixer, clipName, oneShot) {
 
 function updateSreenSize(){
   distortionMaterial.uniforms.resolution = { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
-  console.log(window.innerWidth)
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setPixelRatio(window.devicePixelRatio);
@@ -483,7 +504,7 @@ function updateSreenSize(){
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   camera.position.set(0, 0, window.innerHeight / window.innerWidth * 8.0 - 4.0)
-  // fxaaPass.uniforms['resolution'].value.set(1 / (window.innerWidth * window.devicePixelRatio), 1 / (window.innerHeight * window.devicePixelRatio));
+  fxaaPass.uniforms['resolution'].value.set(1 / (window.innerWidth * window.devicePixelRatio), 1 / (window.innerHeight * window.devicePixelRatio));
   // for(var i=0; i<projectLights.length; i++){
   //   const pos = projectLights[i][0].position
   //   projectLights[i][0].position.set(pos.x, pos.y, -170 + window.innerHeight / window.innerWidth * 8.0 - 4.0)
@@ -531,11 +552,11 @@ function toggleProject(projectName){
       projectTransition(projectName, 1.0)
       projectShown = projectName
       scrollBox.style.overflow = "hidden";
-      updateHover3D("")
+      updateHover3D()
     }else{
       projectTransition(projectShown, 0.0)
       projectShown = ""
-      updateHover3D("")
+      updateHover3D()
     }
   }
 }
@@ -617,7 +638,7 @@ function open2DTabs(tabName){
   document.getElementById('bg').style.pointerEvents= "none";
 
   tabShown = tabName;
-  updateHover3D("");
+  updateHover3D();
 }
 
 function close2DTabs(){
