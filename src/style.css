@@ -197,7 +197,7 @@ a {
 
 .project-tech-logo{
   margin: auto;
-  width: 50px;
+  width: 40px;
   align-self: center;
   justify-self: center;
 }
@@ -288,21 +288,22 @@ a {
     overflow: visible;
   }
 
-  /* #scroll-box {
-    position: absolute;
-    overflow: hidden;
+  #scroll-box {
+    display: grid;
+    position: fixed;
+    width: 100%;
+    visibility: visible;
     height: 100%;
-    width: 2500px;
-    pointer-events:auto;
-    scrollbar-width: none;
-  } */
+    overflow-x: scroll;
+    grid-template-columns: auto auto auto auto auto;
+  }
 
   .scroll-item {
-  position: relative;
-  width: 500px;
-  height: 100%;
-  pointer-events: none;
-}
+    position: relative;
+    height: 100%;
+    width: 500px;
+    pointer-events: none;
+  }
   
   .project-text{
     font-size: 3vw;

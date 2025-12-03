@@ -21,6 +21,7 @@ let scrollPercent = 0.0;
 let scrollTarget = 0.0;
 let previousScrollPercent = 0.0
 let scrollSpeed = 0.0;
+let rotationLerp = 0.0;
 
 let projectLights = [];
 let videosPlayers = [];
@@ -483,7 +484,8 @@ if (skipIntro){
   tunnelMesh.material.uniforms.uOpacity = {value : 1.0}
   introDone = true;
   scrollBox.style.overflow = "scroll";
-  scrollBox.scrollTop = 750.0
+  // scrollBox.scrollTop = 750.0
+  // scrollBox.scrollLeft = 750.0
 }
 
 updateSreenSize();
@@ -513,8 +515,14 @@ function updateCamScrollSpeed(){
   if (!introDone && !scrollDisabled){return}
   const speedDifference = scrollPercent - previousScrollPercent
   scrollSpeed = THREE.MathUtils.lerp(scrollSpeed, speedDifference, 0.1)
+  
 
-  cameraSocket.rotation.set(0, -scrollSpeed*0.1, 0.0)
+  // cameraSocket.rotation.set(0, -scrollSpeed*0.1, 0.0)
+  const scrollPos = Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0
+  rotationLerp = THREE.MathUtils.lerp(rotationLerp, Math.min(Math.max((scrollTarget - scrollPos)*0.1, -Math.PI/3.0), Math.PI/3.0), 0.5)
+  cameraSocket.rotation.set(0, rotationLerp, 0.0)
+
+
   previousScrollPercent = scrollPercent
 }
 
@@ -530,7 +538,8 @@ function updateScroll(){
   if (introDone && !scrollDisabled){
 
     const scrollPosition = Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0
-    scrollTarget = THREE.MathUtils.lerp(scrollTarget, scrollPosition, 0.1)
+    const travellingPos = ((scrollPercent-50)*0.8 - Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0)*0.2
+    scrollTarget = THREE.MathUtils.lerp(scrollTarget, scrollPosition + travellingPos, 0.1)
     cameraSocket.position.set(scrollTarget, cameraSocket.position.y, cameraSocket.position.z);
   }
 }
@@ -606,6 +615,7 @@ function toggleProject(projectName){
     }else{
       projectTransition(projectShown, 0.0)
       projectShown = ""
+      updateHover3D()
     }
   }
 }
@@ -782,7 +792,10 @@ function bioButtonClick(){
 
 function updateScrollValue(){
   if (!scrollDisabled){
-    scrollPercent = ((scrollBox.scrollTop || scrollBox.scrollTop) / ((scrollBox.scrollHeight || scrollBox.scrollHeight) - document.documentElement.clientHeight)) * 100;
+    const scrollPercentX = scrollBox.scrollLeft / (scrollBox.scrollWidth - document.documentElement.clientWidth) * 100.0;
+    const scrollPercentY = scrollBox.scrollTop / (scrollBox.scrollHeight - document.documentElement.clientHeight) * 100.0;
+    scrollPercent = scrollPercentX ? scrollPercentX : scrollPercentY
+    console.log(scrollPercentY)
   }
 }
 
