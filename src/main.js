@@ -417,6 +417,8 @@ backButton.addEventListener("mouseout", () => {
 })
 scrollBox.addEventListener("click", backgroundClick);
 scrollBox.addEventListener("scroll", updateScrollValue);
+document.addEventListener('touchstart', handleTouchStart, false);        
+document.addEventListener('touchmove', handleTouchMove, false);
 
 let mouseCoords = new THREE.Vector2(0.0, 0.0)
 function onMouseMove(event){
@@ -457,6 +459,38 @@ function updateHover3D(){
   }
 }
 
+var xDown = null;
+var yDown = null;
+
+function handleTouchStart(evt) {
+    const firstTouch = evt.touches[0];
+    xDown = firstTouch.clientX;
+    yDown = firstTouch.clientY;
+};
+
+function handleTouchMove(evt) {
+    if ( ! xDown || ! yDown ) {
+        return;
+    }
+
+    var xUp = evt.touches[0].clientX;
+    var yUp = evt.touches[0].clientY;
+
+    var xDiff = xDown - xUp;
+    var yDiff = yDown - yUp;
+    
+    if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {/*most significant*/
+        if ( xDiff > 0 ) {
+            scrollBox.scrollTo(scrollBox.scrollLeft + 500.0, 0)
+        } else {
+            scrollBox.scrollTo(scrollBox.scrollLeft - 500.0, 0)
+        }
+    }
+    /* reset values */
+    xDown = null;
+    yDown = null;
+};
+
 // Dev only
 let skipIntro = true;
 if (skipIntro){
@@ -484,8 +518,8 @@ if (skipIntro){
   tunnelMesh.material.uniforms.uOpacity = {value : 1.0}
   introDone = true;
   scrollBox.style.overflow = "scroll";
-  // scrollBox.scrollTop = 750.0
-  // scrollBox.scrollLeft = 750.0
+  scrollBox.scrollTop = 750.0
+  scrollBox.scrollLeft = 750.0
 }
 
 updateSreenSize();
@@ -517,10 +551,10 @@ function updateCamScrollSpeed(){
   scrollSpeed = THREE.MathUtils.lerp(scrollSpeed, speedDifference, 0.1)
   
 
-  // cameraSocket.rotation.set(0, -scrollSpeed*0.1, 0.0)
-  const scrollPos = Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0
-  rotationLerp = THREE.MathUtils.lerp(rotationLerp, Math.min(Math.max((scrollTarget - scrollPos)*0.1, -Math.PI/3.0), Math.PI/3.0), 0.5)
-  cameraSocket.rotation.set(0, rotationLerp, 0.0)
+  cameraSocket.rotation.set(0, -scrollSpeed*0.1, 0.0)
+  // const scrollPos = Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0
+  // rotationLerp = THREE.MathUtils.lerp(rotationLerp, Math.min(Math.max((scrollTarget - scrollPos)*0.1, -Math.PI/3.0), Math.PI/3.0), 0.1)
+  // cameraSocket.rotation.set(0, rotationLerp, 0.0)
 
 
   previousScrollPercent = scrollPercent
@@ -538,8 +572,8 @@ function updateScroll(){
   if (introDone && !scrollDisabled){
 
     const scrollPosition = Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0
-    const travellingPos = ((scrollPercent-50)*0.8 - Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0)*0.2
-    scrollTarget = THREE.MathUtils.lerp(scrollTarget, scrollPosition + travellingPos, 0.1)
+    // const travellingPos = ((scrollPercent-50)*0.8 - Math.round(((scrollPercent-50)*0.8)/20.0) * 20.0)*0.2
+    scrollTarget = THREE.MathUtils.lerp(scrollTarget, scrollPosition, 0.1)
     cameraSocket.position.set(scrollTarget, cameraSocket.position.y, cameraSocket.position.z);
   }
 }
@@ -791,11 +825,9 @@ function bioButtonClick(){
 }
 
 function updateScrollValue(){
-  if (!scrollDisabled){
-    const scrollPercentX = scrollBox.scrollLeft / (scrollBox.scrollWidth - document.documentElement.clientWidth) * 100.0;
+  if (!scrollDisabled && !scrollBox.scrollLeft){
     const scrollPercentY = scrollBox.scrollTop / (scrollBox.scrollHeight - document.documentElement.clientHeight) * 100.0;
-    scrollPercent = scrollPercentX ? scrollPercentX : scrollPercentY
-    console.log(scrollPercentY)
+    scrollPercent = scrollPercentY;
   }
 }
 
@@ -906,6 +938,7 @@ function enter(){
                     scrollBox.style.overflow = "scroll";
                     tunnelMesh.visible = false;
                     scrollBox.scrollTop = 750.0
+                    scrollBox.scrollLeft = 750.0
                   }
                 });
               }
