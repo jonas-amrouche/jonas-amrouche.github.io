@@ -59,7 +59,7 @@ a {
   bottom: 15%;
   text-align: center;
   color: rgb(255, 255, 255);
-  font-size: 200%;
+  font-size: 150%;
   text-shadow : 0 0 100px white, 0 0 24px rgba(255, 255, 255, 0.199);
 }
 
@@ -99,12 +99,19 @@ a {
   height: 40px;
   filter: drop-shadow(0 0 5px white);
   border-radius: 1px;
+  cursor: default;
 }
 
 .basicButton:hover{
   opacity: 90%;
   filter: drop-shadow(0 0 1px white);
   cursor: pointer;
+}
+
+.basicButton:focus{
+  opacity: 20%;
+  filter: drop-shadow(0 0 5px white);
+  cursor: default;
 }
 
 .inner-button{
@@ -156,13 +163,12 @@ a {
 .project-title{
   position: relative;
   font-family: 'Special Gothic Expanded One';
+  width: 100%;
   margin: auto;
   text-align: center;
-  width: 110%;
-  right: 5%;
   color: rgb(255, 255, 255);
   filter: drop-shadow(0 0 10px rgb(51, 63, 88));
-  font-size: 400%;
+  font-size: 3vw;
 }
 
 .project-text{
@@ -171,7 +177,7 @@ a {
   text-align: justify;
   margin-top: 4%;
   color: rgb(255, 255, 255);
-  font-size: 120%;
+  font-size: 100%;
 }
 
 .project-tech-container{
@@ -282,9 +288,15 @@ a {
   }
 
   .scroll-item {
-  position: relative;
-  width: 500px;
-  height: 100%;
-  pointer-events: none;
-}
+    position: relative;
+    width: 500px;
+    height: 100%;
+    pointer-events: none;
+  }
+  .project-text{
+    font-size: 3vw;
+  }
+  .project-title{
+    font-size: 6vw;
+  }
 }

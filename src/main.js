@@ -379,7 +379,7 @@ function updateHover3D(){
   }else{
     for (let i = 0; i < projects.length; i++){
       const screen = loadingMesh.getObjectByName(projects[i]);
-      screen.material.emissiveIntensity = 0.2;
+      screen.material.emissiveIntensity = 0.0;
       document.body.style.cursor = "default";
     }
   }
@@ -387,28 +387,14 @@ function updateHover3D(){
   if (!hoveringSomething){
     for (let i = 0; i < projects.length; i++){
       const screen = loadingMesh.getObjectByName(projects[i]);
-      screen.material.emissiveIntensity = 0.2;
+      screen.material.emissiveIntensity = 0.0;
     }
     document.body.style.cursor = "default";
   }
-
-  // let hoveringSomething = false;
-  // for (let i = 0; i < projects.length; i++){
-
-  //   if (targetName === projects[i] && !inProjectTransition){
-  //     screen.material.emissiveIntensity = 1.0;
-  //     document.body.style.cursor = "pointer";
-  //     hoveringSomething = true
-  //   }
-  // }
-  
-  // if (!hoveringSomething){
-  //   document.body.style.cursor = "default";
-  // }
 }
 
 // Dev only
-let skipIntro = false;
+let skipIntro = true;
 if (skipIntro){
   cameraSocket.position.set(0, 0, -167);
   camera.fov = 50.0;
@@ -552,11 +538,9 @@ function toggleProject(projectName){
       projectTransition(projectName, 1.0)
       projectShown = projectName
       scrollBox.style.overflow = "hidden";
-      updateHover3D()
     }else{
       projectTransition(projectShown, 0.0)
       projectShown = ""
-      updateHover3D()
     }
   }
 }
