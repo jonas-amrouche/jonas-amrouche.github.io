@@ -769,8 +769,8 @@ function transition2Dtabs(tabName, val){
     duration: 0.3,
     ease: "power2.inOut",
     onUpdate: () => {
-      tab2DContainer.style.opacity =(opacityObj.value * 0.9).toString() + "%";
-      tab2DBackContainer.style.opacity = (opacityObj.value * 0.9).toString() + "%";
+      tab2DContainer.style.opacity =(opacityObj.value * 1.0).toString() + "%";
+      tab2DBackContainer.style.opacity = (opacityObj.value * 0.95).toString() + "%";
     },
     onComplete: () => {
       update2DTabsVisiblity(tabName, val === 0.0 ? "hidden" : "visible", val)
