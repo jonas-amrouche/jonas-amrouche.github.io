@@ -80,6 +80,18 @@ a {
   font-size: 200%;
 }
 
+#desktop-tip-text{
+  position: fixed;
+  font-family: 'Special Gothic Expanded One';
+  filter: drop-shadow(0 0 50px rgb(255, 255, 255));
+  margin: auto;
+  width: 100%;
+  bottom: 15%;
+  text-align: center;
+  color: rgb(114, 114, 114);
+  font-size: 100%;
+}
+
 #toggleSoundButton{
   top: 15px;
   right: 205px;
