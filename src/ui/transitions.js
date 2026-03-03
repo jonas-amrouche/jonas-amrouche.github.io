@@ -40,9 +40,9 @@ function _runBlackHoleTransition({
   // Distortion sweep
   let obj = { value: fromVal };
   gsap.to(obj, {
-    delay: opening ? 0.0 : 1.0,
+    delay: opening ? 0.0 : 0.3,
     value: val,
-    duration: 1.0,
+    duration: opening ? 1.0 : 0.5,
     ease: 'power2.inOut',
     onStart:  () => {
       audio.play(opening ? 'blackHole' : 'reverseBlackHole');
@@ -69,8 +69,8 @@ function _runBlackHoleTransition({
   // Event horizon radius
   gsap.to(distortionMaterial.uniforms.eventHorizonRadius, {
     value: val * BLACK_HOLE.EVENT_HORIZON_RADIUS,
-    delay: opening ? 0.3 : 1.0,
-    duration: 0.7,
+    delay: opening ? 0.3 : 0.3,
+    duration: opening ? 0.7 : 0.3,
     ease: 'power2.inOut',
   });
 
@@ -79,7 +79,7 @@ function _runBlackHoleTransition({
   gsap.to(starObj, {
     value: val,
     delay: opening ? 1.0 : 0.0,
-    duration: 0.7,
+    duration: 0.3,
     ease: 'power2.inOut',
     onUpdate: () => {
       projectStar.material.emissiveIntensity = starObj.value;

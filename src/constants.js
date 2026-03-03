@@ -17,7 +17,7 @@ export const BLOOM = {
 export const BLACK_HOLE = {
   SPHERE_RADIUS: 7.5,
   GRAVITY_STRENGTH: 5.0,
-  EVENT_HORIZON_RADIUS: 3.5,
+  EVENT_HORIZON_RADIUS: 2.5,
 };
 
 export const TUNNEL = {

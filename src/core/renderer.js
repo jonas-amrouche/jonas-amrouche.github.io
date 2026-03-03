@@ -9,7 +9,7 @@ import { BLOOM } from '../constants.js';
 import { distortionShader } from '../shaders/distortion.glsl.js';
 
 export function createRenderer(canvas) {
-  return new THREE.WebGLRenderer({ canvas });
+  return new THREE.WebGLRenderer({antialias: true, canvas });
 }
 
 export function createComposer(renderer, scene, camera) {

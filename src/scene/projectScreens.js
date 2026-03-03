@@ -17,7 +17,7 @@ export function createProjectScreens(loadingMesh, textureLoader, alphaMap, hover
       emissiveIntensity: 0.0,
       alphaMap,
       transparent: true,
-      alphaTest: true,
+      alphaTest: 0.99,
     });
   });
 }

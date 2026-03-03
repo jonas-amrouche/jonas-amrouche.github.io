@@ -18,6 +18,8 @@ const skipIntro = import.meta.env.DEV && import.meta.env.VITE_SKIP_INTRO === 'tr
 
 // Core setup
 const renderer = createRenderer(document.querySelector('#bg'));
+// renderer.shadowMap.enabled = true;
+// renderer.shadowMap.type = THREE.PCFShadowMap;
 const scene = new THREE.Scene();
 const { camera, cameraSocket } = createCamera();
 scene.add(cameraSocket);
@@ -44,10 +46,16 @@ const loadingMesh = gltf.scene;
 const mixer = new THREE.AnimationMixer(loadingMesh);
 scene.add(loadingMesh);
 
+loadingMesh.children.forEach(child => {child.castShadow = true;});
+
 const mask = loadingMesh.getObjectByName('Mask');
 const Windows = loadingMesh.getObjectByName('Windows');
 const props = loadingMesh.getObjectByName('Props');
 const projectStar = loadingMesh.getObjectByName('ProjectStar');
+const projectPlane = loadingMesh.getObjectByName('ProjectPlane');
+projectPlane.receiveShadow = true;
+projectPlane.castShadow = false;
+props.children.forEach(child => {child.children.forEach(ch => {ch.castShadow = true;});});
 
 projectStar.material.emissiveIntensity = 0.0;
 props.visible = false;

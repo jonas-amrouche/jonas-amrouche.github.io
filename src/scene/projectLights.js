@@ -20,6 +20,12 @@ export function createProjectLights(scene, textureLoader) {
     light.map = texture;
     light.position.set(x, 0, -170);
     light.target.position.set(xTarget, 0, -177);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 512;
+    light.shadow.mapSize.height = 512;
+    light.shadow.camera.near = 0.1;
+    light.shadow.camera.far = 20;
+    light.shadow.camera.fov = 30;
 
     scene.add(light);
     scene.add(light.target);
