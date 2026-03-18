@@ -1,147 +1,102 @@
-import { gsap } from 'gsap/gsap-core';
-import { BLACK_HOLE, SCENE } from '../constants.js';
+import { gsap } from 'gsap';
+import { PROJECTS_DATA } from '../scenes.js';
 
-// ─── Black-hole project open/close ───────────────────────────────────────────
+// ─── Project panel ────────────────────────────────────────────────────────────
 
-export function openProject({
-  projectName, distortionMaterial, cameraSocket,
-  projectStar, audio, scrollManager, scrollBox, backButton,
-  onStart, onComplete,
-}) {
-  const container = document.getElementById(projectName);
-  _runBlackHoleTransition({
-    val: 1.0, container, distortionMaterial, cameraSocket,
-    projectStar, backButton, scrollManager, scrollBox,
-    audio, onStart, onComplete,
-  });
-}
+export function openProjectPanel(projectId) {
+  const panel = document.getElementById('project-panel');
+  if (!panel) return;
 
-export function closeProject({
-  projectName, distortionMaterial, cameraSocket,
-  projectStar, audio, scrollManager, scrollBox, backButton, scrollTarget,
-  onComplete,
-}) {
-  const container = document.getElementById(projectName);
-  _runBlackHoleTransition({
-    val: 0.0, container, distortionMaterial, cameraSocket,
-    projectStar, backButton, scrollManager, scrollBox, scrollTarget,
-    audio, onComplete,
-  });
-}
+  const data = PROJECTS_DATA.find(p => p.id === projectId);
+  if (!data) return;
 
-function _runBlackHoleTransition({
-  val, container, distortionMaterial, cameraSocket,
-  projectStar, backButton, scrollManager, scrollBox, scrollTarget,
-  audio, onStart, onComplete,
-}) {
-  const opening = val === 1.0;
-  const fromVal = opening ? 0.0 : 1.0;
+  panel.querySelector('.pp-title').textContent = data.title;
+  panel.querySelector('.pp-hook').textContent  = data.hook;
 
-  // Distortion sweep
-  let obj = { value: fromVal };
-  gsap.to(obj, {
-    delay: opening ? 0.0 : 0.3,
-    value: val,
-    duration: opening ? 1.0 : 0.5,
-    ease: 'power2.inOut',
-    onStart:  () => {
-      audio.play(opening ? 'blackHole' : 'reverseBlackHole');
-      onStart?.();
-    },
-    onUpdate: () => {
-      distortionMaterial.uniforms.sphereRadius.value    = obj.value * BLACK_HOLE.SPHERE_RADIUS;
-      distortionMaterial.uniforms.gravityStrength.value = obj.value * BLACK_HOLE.GRAVITY_STRENGTH;
-    },
-    onComplete: () => {
-      if (opening) {
-        cameraSocket.position.set(0, SCENE.PROJECT_VIEW_Y, SCENE.PROJECT_VIEW_Z);
-        container.style.visibility = 'visible';
-        backButton.style.visibility = 'visible';
-      } else {
-        container.style.visibility = 'hidden';
-        backButton.style.visibility = 'hidden';
-      }
-      distortionMaterial.uniforms.sphereRadius.value    = 0.0;
-      distortionMaterial.uniforms.gravityStrength.value = 0.0;
-    },
+  // Tech icons (new .pp-icons element)
+  panel.querySelector('.pp-icons').innerHTML = (data.icons || [])
+    .map(src => `<img src="${src}" alt="" class="pp-icon">`)
+    .join('');
+
+  // Screenshots with click-to-lightbox
+  const shots = panel.querySelector('.pp-screenshots');
+  shots.innerHTML = data.screenshots
+    .map(s => `<img src="${s}" alt="${data.title}" class="pp-screenshot" data-src="${s}">`)
+    .join('');
+  shots.querySelectorAll('.pp-screenshot').forEach(img => {
+    img.addEventListener('click', () => openLightbox(img.dataset.src));
   });
 
-  // Event horizon radius
-  gsap.to(distortionMaterial.uniforms.eventHorizonRadius, {
-    value: val * BLACK_HOLE.EVENT_HORIZON_RADIUS,
-    delay: opening ? 0.3 : 0.3,
-    duration: opening ? 0.7 : 0.3,
-    ease: 'power2.inOut',
-  });
-
-  // Star fade + UI opacity
-  let starObj = { value: fromVal };
-  gsap.to(starObj, {
-    value: val,
-    delay: opening ? 1.0 : 0.0,
-    duration: 0.3,
-    ease: 'power2.inOut',
-    onUpdate: () => {
-      projectStar.material.emissiveIntensity = starObj.value;
-      container.style.opacity = `${starObj.value * 100}%`;
-      backButton.style.opacity = `${starObj.value * 40}%`;
-    },
-    onComplete: () => {
-      if (!opening) {
-        distortionMaterial.uniforms.sphereRadius.value    = BLACK_HOLE.SPHERE_RADIUS;
-        distortionMaterial.uniforms.gravityStrength.value = BLACK_HOLE.GRAVITY_STRENGTH;
-        cameraSocket.position.set(scrollTarget, 0, SCENE.CAMERA_END_Z);
-        scrollManager.disabled = false;
-        scrollBox.style.overflow = 'scroll';
-      }
-      onComplete?.();
-    },
-  });
-}
-
-// ─── 2D overlay tabs ──────────────────────────────────────────────────────────
-
-let _activeTween = null;
-
-export function open2DTab(tabName, onDone) {
-  _animateTab(tabName, 100.0, onDone);
-}
-
-export function close2DTab(tabName, onDone) {
-  _animateTab(tabName, 0.0, onDone);
-}
-
-function _animateTab(tabName, targetVal, onDone) {
-  const tab = document.getElementById(tabName);
-  const backContainer = document.getElementById('tab2DBackContainer');
-  const fromVal = targetVal === 100.0 ? 0.0 : 100.0;
-
-  if (_activeTween?.isActive()) {
-    _activeTween.eventCallback('onComplete', () => _animateTab(tabName, targetVal, onDone));
-    return;
+  // External link
+  const link = panel.querySelector('.pp-link');
+  if (data.link) {
+    link.href = data.link;
+    link.querySelector('.pp-link-label').textContent = data.linkLabel;
+    link.style.display = 'inline-flex';
+  } else {
+    link.style.display = 'none';
   }
 
-  if (targetVal === 100.0) _setTabVisibility(tab, backContainer, 'visible', 0.0);
+  panel.style.pointerEvents = 'all';
 
-  let obj = { value: fromVal };
-  _activeTween = gsap.to(obj, {
-    value: targetVal,
-    duration: 0.3,
-    ease: 'power2.inOut',
-    onUpdate: () => {
-      tab.style.opacity = `${obj.value}%`;
-      backContainer.style.opacity = `${obj.value * 0.95}%`;
-    },
+  const h = panel.offsetHeight || 130;
+  gsap.fromTo(panel,
+    { y: h, autoAlpha: 0 },
+    { y: 0,  autoAlpha: 1, duration: 0.5, ease: 'power3.out' },
+  );
+}
+
+export function closeProjectPanel() {
+  const panel = document.getElementById('project-panel');
+  if (!panel) return;
+  const h = panel.offsetHeight || 200;
+  gsap.to(panel, {
+    y: h,
+    autoAlpha: 0,
+    duration: 0.35,
+    ease: 'power3.in',
     onComplete: () => {
-      if (targetVal === 0.0) _setTabVisibility(tab, backContainer, 'hidden', 0.0);
-      onDone?.();
+      panel.style.pointerEvents = 'none';
     },
   });
 }
 
-function _setTabVisibility(tab, back, visibility, opacity) {
-  tab.style.visibility = visibility;
-  back.style.visibility = visibility;
-  tab.style.opacity = `${opacity * 0.9}%`;
-  back.style.opacity = `${opacity * 0.9}%`;
+// ─── About overlay ────────────────────────────────────────────────────────────
+// Pure CSS transitions — no GSAP, no delay, instant response on close.
+
+export function openAbout() {
+  const el = document.getElementById('about-overlay');
+  if (!el) return;
+  el.style.pointerEvents = 'all';
+  // Force reflow so transition fires from the closed state
+  el.getBoundingClientRect();
+  el.classList.add('about-visible');
+}
+
+export function closeAbout() {
+  const el = document.getElementById('about-overlay');
+  if (!el) return;
+  el.classList.remove('about-visible');
+  el.style.pointerEvents = 'none';
+}
+
+// ─── Screenshot lightbox ──────────────────────────────────────────────────────
+
+function openLightbox(src) {
+  const lb  = document.getElementById('pp-lightbox');
+  const img = document.getElementById('pp-lightbox-img');
+  if (!lb || !img) return;
+  img.src = src;
+  lb.classList.add('lb-open');
+  lb.addEventListener('click', closeLightbox, { once: true });
+  window.addEventListener('keydown', _lbKeyClose, { once: true });
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('pp-lightbox');
+  if (lb) lb.classList.remove('lb-open');
+}
+
+function _lbKeyClose(e) {
+  if (e.key === 'Escape') closeLightbox();
 }
