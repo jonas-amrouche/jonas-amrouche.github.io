@@ -477,7 +477,7 @@ function initSkipIntroState() {
   Windows.visible    = true;
   tunnelMesh.visible = false;
   props.visible      = true;
-  setLightsIntensity(lights, 1.0);
+  setLightsIntensity(lights, 3.0);
   tunnelMesh.material.uniforms.uOpacity = { value: 0.0 };
   introDone = true;
   navigator = new ProjectNavigator({ cameraSocket, onProjectChange: onProjectArrival });

@@ -50,7 +50,7 @@ export function runIntro({
         duration: 2.0,
         ease: 'power2.inOut',
         onUpdate: function () {
-          setLightsIntensity(lights, this.progress());
+          setLightsIntensity(lights, this.progress() * 3.0);
         },
       });
 
