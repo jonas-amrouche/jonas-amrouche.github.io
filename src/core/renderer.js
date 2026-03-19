@@ -3,19 +3,36 @@ import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { FXAAPass }        from 'three/addons/postprocessing/FXAAPass.js';
-import { ShaderPass }      from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
 import { BLOOM }           from '../constants.js';
-import { cursorDistortionShader } from '../shaders/distortion_cursor.glsl.js';
+
+const IS_TOUCH = window.matchMedia('(hover: none)').matches;
 
 export function createRenderer(canvas) {
-  return new THREE.WebGLRenderer({ antialias: true, canvas });
+  const renderer = new THREE.WebGLRenderer({
+    antialias: !IS_TOUCH, // native AA on desktop, off on mobile (FXAA handles it)
+    canvas,
+  });
+
+  // Enable shadow maps — PCFSoft gives smooth penumbra matching projector look
+  renderer.shadowMap.enabled = false;
+
+  return renderer;
 }
 
 export function createComposer(renderer, scene, camera) {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
 
+  if (IS_TOUCH) {
+    // Mobile: bare minimum — just render + output. No bloom, no FXAA, no cursor shader.
+    composer.addPass(new OutputPass());
+    // Return a stub cursorMaterial so main.js doesn't crash on uniform updates
+    const stub = { uniforms: { strength: { value: 0 }, mouseUV: { value: new THREE.Vector2() }, resolution: { value: new THREE.Vector2() } } };
+    return { composer, fxaaPass: null, cursorMaterial: stub };
+  }
+
+  // Desktop: FXAA + Bloom + Output (cursor distortion removed — not worth the pass cost)
   const fxaaPass = new FXAAPass();
   composer.addPass(fxaaPass);
 
@@ -25,28 +42,35 @@ export function createComposer(renderer, scene, camera) {
   );
   composer.addPass(bloomPass);
 
-  // ShaderPass takes the raw shader definition object — NOT a ShaderMaterial.
-  // It creates its own ShaderMaterial internally, exposed as cursorPass.material.
-  const cursorPass = new ShaderPass(cursorDistortionShader);
-  composer.addPass(cursorPass);
-
   composer.addPass(new OutputPass());
 
-  // Return the pass's internal material so main.js can update uniforms each frame.
-  return { composer, fxaaPass, cursorMaterial: cursorPass.material };
+  // Stub cursorMaterial (distortion shader removed)
+  const cursorMaterial = {
+    uniforms: {
+      strength:   { value: 0 },
+      mouseUV:    { value: new THREE.Vector2() },
+      resolution: { value: new THREE.Vector2() },
+    },
+  };
+
+  return { composer, fxaaPass, cursorMaterial };
 }
 
 export function resizeAll(renderer, composer, fxaaPass, cursorMaterial, camera) {
   const w   = window.innerWidth;
   const h   = window.innerHeight;
-  const dpr = window.devicePixelRatio;
+  // Cap DPR at 2 — retina beyond 2x adds GPU load with no visible benefit
+  const dpr = Math.min(window.devicePixelRatio, IS_TOUCH ? 1.5 : 2);
 
   renderer.setPixelRatio(dpr);
   renderer.setSize(w, h);
   composer.setPixelRatio(dpr);
   composer.setSize(w, h);
-  fxaaPass.uniforms['resolution'].value.set(1 / (w * dpr), 1 / (h * dpr));
-  cursorMaterial.uniforms.resolution.value.set(w, h);
+
+  if (fxaaPass) {
+    fxaaPass.uniforms['resolution'].value.set(1 / (w * dpr), 1 / (h * dpr));
+  }
+
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   camera.position.set(0, 0, h / w * 8.0 - 4.0);

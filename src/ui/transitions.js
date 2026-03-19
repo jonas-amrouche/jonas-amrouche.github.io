@@ -1,5 +1,5 @@
 import { gsap } from 'gsap';
-import { PROJECTS_DATA } from '../scenes.js';
+import { PROJECTS } from '../scenes.js';
 
 // ─── Project panel ────────────────────────────────────────────────────────────
 
@@ -7,7 +7,7 @@ export function openProjectPanel(projectId) {
   const panel = document.getElementById('project-panel');
   if (!panel) return;
 
-  const data = PROJECTS_DATA.find(p => p.id === projectId);
+  const data = PROJECTS[projectId];
   if (!data) return;
 
   panel.querySelector('.pp-title').textContent = data.title;

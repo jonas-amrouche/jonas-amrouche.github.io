@@ -4,16 +4,17 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { SCENE } from './constants.js';
-import { PROJECT_IDS } from './scenes.js';
+import { PROJECT_IDS, NAV_ORDER, NAV_LENGTH, PROJECTS } from './scenes.js';
 import { createRenderer, createComposer, resizeAll } from './core/renderer.js';
 import { createCamera } from './core/camera.js';
 import { AudioManager } from './audio/AudioManager.js';
 import { createTunnel } from './scene/tunnel.js';
 import { createProjectLights, setLightsIntensity } from './scene/projectLights.js';
-import { createProjectScreens, clearAllHovers } from './scene/projectScreens.js';
+import { createProjectScreens } from './scene/projectScreens.js';
 import { ProjectNavigator } from './ui/scroll.js';
 import { openProjectPanel, closeProjectPanel, openAbout, closeAbout } from './ui/transitions.js';
 import { runIntro } from './ui/introSequence.js';
+
 
 const skipIntro = import.meta.env.DEV && import.meta.env.VITE_SKIP_INTRO === 'true';
 const IS_TOUCH  = window.matchMedia('(hover: none)').matches;
@@ -72,17 +73,12 @@ const loadingMesh = gltf.scene;
 const mixer       = new THREE.AnimationMixer(loadingMesh);
 scene.add(loadingMesh);
 
-loadingMesh.children.forEach(child => { child.castShadow = true; });
-
 const mask         = loadingMesh.getObjectByName('Mask');
 const Windows      = loadingMesh.getObjectByName('Windows');
 const props        = loadingMesh.getObjectByName('Props');
 const projectPlane = loadingMesh.getObjectByName('ProjectPlane');
-projectPlane.receiveShadow = true;
-projectPlane.castShadow    = false;
-props.children.forEach(child => {
-  child.children.forEach(ch => { ch.castShadow = true; });
-});
+
+// Shadows disabled.
 
 if (mask) mask.visible = false;
 props.visible         = false;
@@ -174,11 +170,8 @@ let currentProjectIndex = -1;
 let _currentHovered     = null;
 
 const mouseNDC  = new THREE.Vector2();
-const mouseUV   = new THREE.Vector2(-1.0, -1.0);
 const raycaster = new THREE.Raycaster();
 const clock     = new THREE.Clock();
-let _strengthTarget  = 0.0;
-let _strengthCurrent = 0.0;
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 
@@ -194,7 +187,8 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('#about-close')) closeAboutPanel();
   if (e.target.id === 'about-overlay')  closeAboutPanel();
   if (e.target.closest('#arrival-card') && currentProjectIndex > 0) {
-    openPanel(PROJECT_IDS[currentProjectIndex - 1]);
+    const stopId = NAV_ORDER[currentProjectIndex];
+    if (stopId && stopId !== 'Welcome') openPanel(stopId);
   }
 });
 
@@ -207,7 +201,6 @@ function animate() {
   requestAnimationFrame(animate);
   mixer.update(clock.getDelta());
   tunnelMesh.material.uniforms.uTime = { value: clock.elapsedTime };
-  _updateCursorShader();
   composer.render();
 }
 animate();
@@ -225,16 +218,8 @@ function updateHover() {
     if (_currentHovered) _setScreenHoverAnim(_currentHovered, false);
     if (effective)        _setScreenHoverAnim(effective, true);
     _currentHovered = effective;
-    _strengthTarget = effective ? 1.0 : 0.18;
     cursor.classList.toggle('cursor--hover', !!effective);
   }
-}
-
-function _updateCursorShader() {
-  if (!introDone || IS_TOUCH) return;
-  _strengthCurrent += (_strengthTarget - _strengthCurrent) * 0.08;
-  cursorMaterial.uniforms.strength.value = _strengthCurrent;
-  cursorMaterial.uniforms.mouseUV.value.copy(mouseUV);
 }
 
 function _setScreenHoverAnim(id, hovered) {
@@ -311,11 +296,10 @@ function buildDotNav() {
   const nav = document.createElement('div');
   nav.id = 'dot-nav';
   nav.style.visibility = 'hidden';
-  const allStops = ['Welcome', ...PROJECT_IDS];
-  allStops.forEach((name, i) => {
+  NAV_ORDER.forEach((id, i) => {
     const dot = document.createElement('button');
     dot.className = 'dot-btn';
-    dot.setAttribute('aria-label', `Go to ${name}`);
+    dot.setAttribute('aria-label', id);
     dot.dataset.index = i;
     dot.addEventListener('click', () => { if (navigator && !panelOpen) navigator.goTo(i); });
     nav.appendChild(dot);
@@ -359,13 +343,6 @@ function hideScrollHint() {
 // ─── Arrival card ─────────────────────────────────────────────────────────────
 
 // Data for the arrival card (short version — full data lives in scenes.js)
-const ARRIVAL_DATA = {
-  Firelive:      { title: 'Firelive',       hook: 'Live mixing software with loop buffers and custom controller support.' },
-  Elumin:        { title: 'Elumin',         hook: 'Atmospheric exploration game — 4 years, custom Blender tooling, Steam page.' },
-  ServerMeshing: { title: 'Server Meshing', hook: 'Distributed multiplayer architecture with proximity VOIP and server meshing.' },
-  Metronim:      { title: 'Metronim',       hook: 'Multiplayer browser game — metro stations firing trains.' },
-};
-
 function buildArrivalCard() {
   const el = document.createElement('div');
   el.id = 'arrival-card';
@@ -377,10 +354,10 @@ function buildArrivalCard() {
 }
 
 function showArrivalCard(projectId) {
-  const data = ARRIVAL_DATA[projectId];
+  const data = PROJECTS[projectId];
   if (!data) { hideArrivalCard(); return; }
   document.getElementById('ac-title').textContent = data.title;
-  document.getElementById('ac-hook').textContent  = data.hook;
+  document.getElementById('ac-hook').textContent  = data.arrival || data.hook;
   arrivalCard.classList.remove('card-hide');
   arrivalCard.classList.add('card-show');
 }
@@ -396,7 +373,6 @@ function onMouseMove(e) {
   const w = renderer.domElement.clientWidth;
   const h = renderer.domElement.clientHeight;
   mouseNDC.set(e.clientX / w * 2 - 1, -(e.clientY / h * 2 - 1));
-  mouseUV.set(e.clientX / w, 1.0 - e.clientY / h);
   if (introDone) updateHover();
 }
 
@@ -434,9 +410,9 @@ function onEscape() {
     panelOpen = false;
     if (navigator) navigator.disabled = false;
     closeProjectPanel();
-    clearAllHovers(loadingMesh);
     if (_currentHovered) { _setScreenHoverAnim(_currentHovered, false); _currentHovered = null; }
-    if (currentProjectIndex > 0) showArrivalCard(PROJECT_IDS[currentProjectIndex - 1]);
+    const stopId = NAV_ORDER[currentProjectIndex];
+    if (stopId && stopId !== 'Welcome') showArrivalCard(stopId);
   }
 }
 
@@ -462,8 +438,9 @@ function onProjectArrival(index) {
   currentProjectIndex = index;
   updateDots(index);
   hideScrollHint();
-  if (index > 0) showArrivalCard(PROJECT_IDS[index - 1]);
-  else           hideArrivalCard();
+  const stopId = NAV_ORDER[index];
+  if (stopId && stopId !== 'Welcome') showArrivalCard(stopId);
+  else hideArrivalCard();
 }
 
 function _startExperience() {
@@ -474,13 +451,16 @@ function _startExperience() {
     audio, playClip, loadingAction,
     onProjectChange: () => {
       navigator = new ProjectNavigator({ cameraSocket, onProjectChange: onProjectArrival });
+      navigator.onScrollWhileDisabled = () => {
+        // Scroll while panel open: close panel then let navigator handle next scroll
+        if (panelOpen) onEscape();
+      };
       dotNav.style.visibility = 'visible';
       showScrollHint();
       onProjectArrival(0);
     },
   }).then(() => {
     introDone = true;
-    _strengthTarget = 0.18;
     if (enterEl) enterEl.style.visibility = 'hidden';
   });
 }
@@ -498,8 +478,8 @@ function initSkipIntroState() {
   setLightsIntensity(lights, 1.0);
   tunnelMesh.material.uniforms.uOpacity = { value: 0.0 };
   introDone = true;
-  _strengthTarget = 0.18;
   navigator = new ProjectNavigator({ cameraSocket, onProjectChange: onProjectArrival });
+  navigator.onScrollWhileDisabled = () => { if (panelOpen) onEscape(); };
   dotNav.style.visibility = 'visible';
   showScrollHint();
   onProjectArrival(0);

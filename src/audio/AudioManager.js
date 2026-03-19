@@ -62,7 +62,6 @@ export class AudioManager {
   }
 
   loadAll(skipIntro) {
-    this.load('loading',        '/loading_loop.ogg',  { loop: true,  volume: AUDIO.LOADING, autoPlay: !skipIntro });
     this.load('blackHole',      '/black_hole_1.ogg',  { loop: false, volume: AUDIO.FX });
     this.load('reverseBlackHole','/black_hole_2.ogg', { loop: false, volume: AUDIO.FX });
     this.load('intro',          '/intro_sound.ogg',   { loop: false, volume: AUDIO.FX });

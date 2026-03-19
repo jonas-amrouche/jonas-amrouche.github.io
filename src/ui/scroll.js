@@ -1,32 +1,27 @@
-import * as THREE from 'three';
-import { gsap } from 'gsap/gsap-core';
-import { SCENE_STOPS } from '../scenes.js';
+import { gsap } from 'gsap';
+import { NAV_ORDER, NAV_LENGTH, WORLD_MAP, SEAM, SEAM_DUMMY_RIGHT, SEAM_DUMMY_LEFT } from '../scenes.js';
 
 /**
- * ProjectNavigator — reads stop positions from scenes.js.
+ * ProjectNavigator
  *
- * SCENE_STOPS[0]   = DummyRight (rightmost, clone of last project)
- * SCENE_STOPS[1]   = Welcome
- * SCENE_STOPS[2..] = Projects
- * SCENE_STOPS[N-1] = DummyLeft (leftmost, clone of Welcome)
+ * seqIndex = position in NAV_ORDER. Navigation is seqIndex ± 1 (mod NAV_LENGTH).
  *
- * Wrap right (past last project): teleport to DummyRight → animate to Welcome
- * Wrap left  (before Welcome):    teleport to DummyLeft  → animate to last project
+ * At the seam, before animating, the camera teleports to the appropriate dummy:
+ *   Going right (seam.seamNavIdx → seamNavIdx+1): teleport to SEAM_DUMMY_RIGHT (left of destination)
+ *   Going left  (seamNavIdx+1 → seamNavIdx):       teleport to SEAM_DUMMY_LEFT  (right of destination)
+ * Both produce a short one-step slide in the correct direction.
  */
-
-const DUMMY_RIGHT = 0;
-const DUMMY_LEFT  = SCENE_STOPS.length - 1;
-const REAL_FIRST  = 1;                      // Welcome
-const REAL_LAST   = SCENE_STOPS.length - 2; // Last project
 
 export class ProjectNavigator {
   constructor({ cameraSocket, onProjectChange }) {
     this.cameraSocket    = cameraSocket;
     this.onProjectChange = onProjectChange;
-    this.physIndex       = REAL_FIRST; // start at Welcome
+    this.seqIndex        = 0;
     this.isAnimating     = false;
     this.disabled        = false;
     this._touchStartX    = null;
+    this._lastScroll     = 0;
+    this.onScrollWhileDisabled = null; // called when scroll fires while disabled
 
     this._onWheel      = this._onWheel.bind(this);
     this._onKeyDown    = this._onKeyDown.bind(this);
@@ -39,21 +34,20 @@ export class ProjectNavigator {
     window.addEventListener('touchend',   this._onTouchEnd,   { passive: true });
   }
 
-  _stopData(i)    { return SCENE_STOPS[i]; }
-  _logicalOf(i)   { return i - REAL_FIRST; } // physical → logical (0 = Welcome)
-
-  _teleport(i) {
-    const s = this._stopData(i);
-    this.cameraSocket.position.set(s.x, s.y, this.cameraSocket.position.z);
-    this.physIndex = i;
+  _snapTo(stopId) {
+    const s = WORLD_MAP[stopId];
+    if (!s) return;
+    this.cameraSocket.position.x = s.x;
+    this.cameraSocket.position.y = s.y;
   }
 
-  _animateTo(i) {
+  _animateTo(seqIdx) {
     if (this.isAnimating) return;
-    const s = this._stopData(i);
-    this.physIndex   = i;
     this.isAnimating = true;
-    this.onProjectChange(this._logicalOf(i));
+    this.seqIndex    = seqIdx;
+
+    const s = WORLD_MAP[NAV_ORDER[seqIdx]];
+    this.onProjectChange(seqIdx);
 
     gsap.to(this.cameraSocket.position, {
       x: s.x, y: s.y,
@@ -63,51 +57,54 @@ export class ProjectNavigator {
     });
   }
 
-  // Navigate to a logical index (0 = Welcome)
   goTo(logicalIndex, instant = false) {
-    const phys = logicalIndex + REAL_FIRST;
-    if (phys < REAL_FIRST || phys > REAL_LAST) return;
+    if (logicalIndex < 0 || logicalIndex >= NAV_LENGTH) return;
     if (instant) {
-      this._teleport(phys);
+      this.seqIndex = logicalIndex;
+      this._snapTo(NAV_ORDER[logicalIndex]);
       this.onProjectChange(logicalIndex);
       return;
     }
-    this._animateTo(phys);
+    this._animateTo(logicalIndex);
   }
 
   next() {
     if (this.disabled || this.isAnimating) return;
-    const next = this.physIndex + 1;
-    if (next > REAL_LAST) {
-      // Past last project → wrap: teleport to DummyRight, animate to Welcome
-      this._teleport(DUMMY_RIGHT);
-      this._animateTo(REAL_FIRST);
-    } else {
-      this._animateTo(next);
+    const nextSeq = (this.seqIndex + 1) % NAV_LENGTH;
+
+    // Crossing seam going right?
+    if (SEAM && this.seqIndex === SEAM.seamNavIdx && SEAM_DUMMY_RIGHT) {
+      this._snapTo(SEAM_DUMMY_RIGHT.id);
     }
+
+    this._animateTo(nextSeq);
   }
 
   prev() {
     if (this.disabled || this.isAnimating) return;
-    const prev = this.physIndex - 1;
-    if (prev < REAL_FIRST) {
-      // Before Welcome → wrap: teleport to DummyLeft, animate to last project
-      this._teleport(DUMMY_LEFT);
-      this._animateTo(REAL_LAST);
-    } else {
-      this._animateTo(prev);
+    const prevSeq = (this.seqIndex - 1 + NAV_LENGTH) % NAV_LENGTH;
+
+    // Crossing seam going left? (from seamNavIdx+1 back to seamNavIdx)
+    const seamRight = (SEAM.seamNavIdx + 1) % NAV_LENGTH;
+    if (SEAM && this.seqIndex === seamRight && SEAM_DUMMY_LEFT) {
+      this._snapTo(SEAM_DUMMY_LEFT.id);
     }
+
+    this._animateTo(prevSeq);
   }
 
   _onWheel(e) {
-    if (this.disabled) return;
     e.preventDefault();
-    // Vertical scroll: down=next, up=prev (matches dot nav top-to-bottom order)
-    // Horizontal scroll: right=next, left=prev (matches world left layout)
+    if (this.disabled) {
+      // While panel is open: close it and let the scroll fire navigation
+      if (this.onScrollWhileDisabled) this.onScrollWhileDisabled();
+      return;
+    }
+    const now = Date.now();
+    if (now - this._lastScroll < 300) return;
+    this._lastScroll = now;
     const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-    // Scroll up (delta < 0) = move left in world = prev
-    // Scroll down (delta > 0) = move right in world = next
-    if (delta < 0) this.next();
+    if (delta > 0) this.next();
     else this.prev();
   }
 
@@ -121,8 +118,13 @@ export class ProjectNavigator {
 
   _onTouchEnd(e) {
     if (this._touchStartX === null) return;
-    const dx = this._touchStartX - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > 40) dx > 0 ? this.prev() : this.next();
+    // On mobile, swipe does nothing while panel is open (user must close explicitly)
+    if (!this.disabled) {
+      const dx = this._touchStartX - e.changedTouches[0].clientX;
+      // dx > 0: finger moved left (swipe left) = scroll right = next()
+      // dx < 0: finger moved right (swipe right) = scroll left = prev()
+      if (Math.abs(dx) > 40) dx > 0 ? this.next() : this.prev();
+    }
     this._touchStartX = null;
   }
 

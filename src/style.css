@@ -168,7 +168,7 @@ canvas {
   top: 50%;
   transform: translateY(-50%);
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 10px;
   z-index: 100;
 }
@@ -679,11 +679,12 @@ canvas {
 
   #dot-nav {
     right: auto;
-    bottom: 16px;
-    top: auto;
+    top: 12px;
+    bottom: auto;
     transform: translateX(-50%);
     flex-direction: row;
     left: 50%;
+    gap: 8px;
   }
 
   .dot-btn { width: 8px; height: 8px; } /* larger tap targets */
