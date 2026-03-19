@@ -46,8 +46,10 @@ loadingManager.onProgress = (_url, loaded, total) => {
   if (loadingEl) loadingEl.textContent = `LOADING ${Math.round((loaded / total) * 100)}%`;
 };
 
+let _loadFired = false;
 loadingManager.onLoad = () => {
-  if (skipIntro) return;
+  if (skipIntro || _loadFired) return;
+  _loadFired = true;
   if (loadingEl) {
     loadingEl.style.transition = 'opacity 0.4s';
     loadingEl.style.opacity    = '0';
